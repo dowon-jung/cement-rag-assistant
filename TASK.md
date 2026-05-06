@@ -348,7 +348,9 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
   - [ ] `k8s/redis/` — Redis
   - [ ] `k8s/neo4j/` — Neo4j (StatefulSet)
   - [ ] `k8s/kafka/` — Kafka (KRaft 모드, StatefulSet)
-  - [ ] `k8s/ollama/` — Ollama LLM 서빙
+  - [ ] `k8s/ollama/` — Ollama LLM 서빙 (CPU / 소규모 GPU)
+  - [ ] `k8s/vllm/` — vLLM LLM 서빙 (GPU 고처리량)
+  - [ ] `k8s/jaeger/` — Jaeger 트레이싱 (에어갭 환경용)
   - [ ] `k8s/monitoring/` — Prometheus + Grafana
 - [ ] ConfigMap / Secret 분리 (`k8s/config/`)
 - [ ] Ingress 설정 (`k8s/ingress.yaml`)

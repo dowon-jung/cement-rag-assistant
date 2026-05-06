@@ -189,7 +189,7 @@ RAG 구조 자체는 동일해요. **LLM이 어디 있느냐**가 다를 뿐이�
 | **LLM 서빙** | Gemma4 — Ollama (로컬) / vLLM (프로덕션) |
 | **실시간 API** | 한국은행 ECOS, 네이버 뉴스 검색, 기상청 Open API |
 | **스트리밍** | FastAPI SSE (Server-Sent Events) |
-| **모니터링** | Prometheus, Grafana, LangSmith |
+| **모니터링** | Prometheus, Grafana, LangSmith (인터넷) / Jaeger + OpenTelemetry (에어갭) |
 | **컨테이너** | Docker, Docker Compose |
 | **오케스트레이션** | Kubernetes (minikube → EKS/GKE), HPA |
 | **평가** | RAGAS (Faithfulness, Answer Relevancy, Context Recall) |
@@ -230,7 +230,8 @@ cement-rag-assistant/
 ├── k8s/                          # Kubernetes 매니페스트
 │   ├── app/ qdrant/ postgres/
 │   ├── redis/ neo4j/ kafka/
-│   ├── ollama/ monitoring/
+│   ├── ollama/ vllm/ monitoring/
+│   ├── jaeger/                   # 에어갭 환경 트레이싱
 │   ├── config/                   # ConfigMap / Secret
 │   ├── ingress.yaml
 │   └── hpa.yaml
@@ -254,18 +255,19 @@ cement-rag-assistant/
 | # | 문서 | 내용 |
 |---|------|------|
 | 01 | [데이터 흐름 설계](docs/01_data_flow.md) | 수집 흐름, 청킹 전략, 갱신 주기 |
-| 02 | DB 스키마 설계 | PostgreSQL / Qdrant / Neo4j / Redis |
-| 03 | Agent 설계 | LangGraph 상태, Router, Tool 스펙, A2A |
-| 04 | API 명세 | 엔드포인트, Pydantic 스키마, SSE |
-| 05 | 환경 설정 가이드 | API 키 발급, Docker / K8s 구성 |
-| 06 | 검색 품질 평가 기준 | RAGAS, 청킹 A/B, Re-ranker 비교 |
-| 07 | 모델 서빙 비교 설계 | Ollama vs vLLM, TPS / TTFT |
-| 08 | 성능 최적화 설계 | 비동기 처리, 병렬 Tool 실행 |
-| 09 | GraphRAG 설계 | Neo4j 그래프 구조, Cypher 쿼리 |
-| 10 | Multi-Agent A2A 설계 | Orchestrator, Sub-Agent, 인터페이스 |
-| 11 | 모니터링 설계 | Prometheus 메트릭, Grafana, LangSmith |
-| 12 | Kafka 이벤트 스트리밍 설계 | Topic 구조, DLQ, Consumer 전략 |
-| 13 | Kubernetes 배포 설계 | Deployment, HPA, Ingress, PV |
+| 02 | [DB 스키마 설계](docs/02_db_schema.md) | PostgreSQL / Qdrant / Neo4j / Redis |
+| 03 | [Agent 설계](docs/03_agent_design.md) | LangGraph 상태, Router, Tool 스펙, A2A |
+| 04 | [API 명세](docs/04_api_spec.md) | 엔드포인트, Pydantic 스키마, SSE |
+| 05 | [환경 설정 가이드](docs/05_env_setup.md) | API 키 발급, Docker / K8s 구성 |
+| 06 | [검색 품질 평가 기준](docs/06_eval_criteria.md) | RAGAS, 청킹 A/B, Re-ranker 비교 |
+| 07 | [모델 서빙 비교 설계](docs/07_model_serving.md) | Ollama vs vLLM vs Bedrock vs Anthropic |
+| 08 | [성능 최적화 설계](docs/08_performance.md) | 비동기 처리, 병렬 Tool 실행, 4-tier 캐시 |
+| 09 | [GraphRAG 설계](docs/09_graph_rag.md) | Neo4j 그래프 구조, Cypher 쿼리 |
+| 10 | [Multi-Agent A2A 설계](docs/10_multi_agent.md) | Orchestrator, Sub-Agent, AgentBus |
+| 11 | [모니터링 설계](docs/11_monitoring.md) | Prometheus, Grafana, LangSmith / Jaeger |
+| 12 | [Kafka 이벤트 스트리밍 설계](docs/12_kafka.md) | Topic 9종, DLQ, Consumer 전략 |
+| 13 | [Kubernetes 배포 설계](docs/13_kubernetes.md) | Deployment, HPA, Ingress, KEDA |
+| 14 | [온프레미스 / 에어갭 설계](docs/14_airgap.md) | AIRGAP_MODE, Harbor, LLM 백엔드 추상화 |
 
 ---
 
@@ -355,7 +357,7 @@ Harbor 내부 레지스트리, 오프라인 모델 서빙(Ollama), Jaeger 트레
 
 | Phase | 내용 | 핵심 기술 |
 |-------|------|-----------|
-| 0 | 설계 확정 | 설계 문서 13개 |
+| 0 | 설계 확정 | 설계 문서 14개 |
 | 1 | 프로젝트 뼈대 | Docker Compose, 디렉토리 구조 |
 | 2 | 데이터 수집 | httpx async, Redis, asyncio.gather |
 | 3 | Kafka 파이프라인 | aiokafka, DLQ, 인덱싱 워커 |
