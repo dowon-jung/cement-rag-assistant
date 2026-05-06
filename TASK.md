@@ -237,7 +237,7 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 
 > 목적: 벡터 검색으로 불가능한 복합 규제 질의 처리
 > 선행 조건: Phase 3 완료
-> JD 대응: "Graph DB 도입 예정"
+> 도입 배경: 복합 규제 질의 처리를 위한 그래프 DB 필요성
 
 - [ ] 규제 문서 → Neo4j 그래프 변환 (`app/indexing/graph_indexer.py`)
   - 노드: 법령, 조항, 수치기준, 오염물질
@@ -253,7 +253,7 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 
 > 목적: 단일 Agent → 전문화된 Sub-Agent 분리
 > 선행 조건: Phase 5 완료
-> JD 대응: "Multi-Agent 구조 확장 및 A2A 기반 연동"
+> 도입 배경: 단일 Agent 한계 극복 및 Agent 간 표준 통신 프로토콜 필요
 
 - [ ] Orchestrator Agent (`app/agent/orchestrator.py`)
 - [ ] Sub-Agent 구현
@@ -300,9 +300,9 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 
 ## Phase 9 — 모델 서빙 비교 실험
 
-> 목적: JD "vLLM 도입 예정" 직접 대응
+> 목적: 프로덕션급 LLM 서빙 프레임워크 검증
 > 선행 조건: Phase 8 완료
-> JD 대응: "vLLM 등 모델 서빙 프레임워크 도입"
+> 도입 배경: continuous batching 기반 고처리량 LLM 서빙 필요
 
 - [ ] Ollama 환경 구성 — Gemma4 로컬 서빙
 - [ ] vLLM 환경 구성 — continuous batching (GPU 필요 시 RunPod 활용)
@@ -373,7 +373,7 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 
 > 목적: 인터넷 차단 폐쇄망 환경에서도 전체 스택 동작
 > 선행 조건: Phase 11 완료
-> 어필 포인트: 제조업 고객사 보안 환경 직접 대응 가능
+> 도입 효과: 제조업 고객사 보안 환경에서도 납품 가능
 
 ### 외부 의존성 내부화
 
@@ -455,9 +455,9 @@ LLM_BACKEND=anthropic  Anthropic API — 엔터프라이즈 계약 + 데이터 �
 
 ---
 
-## Phase 13 — 포트폴리오 마무리
+## Phase 13 — 데모 및 문서 마무리
 
-> 목적: 외부 접근 가능한 데모 + 문서 완성
+> 목적: 사내 시연 가능한 데모 환경 + 문서 완성
 > 선행 조건: Phase 12 완료
 
 - [ ] Streamlit 데모 UI (`streamlit_app.py`)
@@ -529,7 +529,7 @@ Phase 2 (수집)     Phase 3 (Kafka + 인덱싱)
 
 ## 고도화 항목 전체 요약
 
-| 항목 | Phase | 기술 | JD 대응 | 어필 포인트 |
+| 항목 | Phase | 기술 | 도입 배경 | 도입 효과 |
 |------|-------|------|---------|-------------|
 | Redis 캐시 | 2 | Redis TTL | - | 실서비스 캐시 패턴 |
 | Kafka 이벤트 파이프라인 | 3 | aiokafka | - | 수집·처리 디커플링 |

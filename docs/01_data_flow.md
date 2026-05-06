@@ -341,7 +341,7 @@ Consumer 구성:
 ## 6. ERP 배치 수집 흐름 (소스 7 — 시뮬레이션)
 
 ```
-포트폴리오 단계:
+초기 단계 (샘플 데이터):
   python app/data/samples/generate_erp.py
   → 2년치 일별 생산·재고 샘플 데이터 생성
   → 제품 유형: 보통포틀랜드, 고로슬래그, 백색시멘트
@@ -411,4 +411,4 @@ LLM_BACKEND=anthropic (Anthropic API)
 | 유연탄 가격 | 수동 트리거 | 월 1회 | `--source coal` |
 | 환경부 규제 | 수동 트리거 | 법령 개정 시 | `--source regulation` |
 | 생산 매뉴얼 | 수동 트리거 | 매뉴얼 개정 시 | `--source manual` |
-| ERP | Kafka 배치 | 일 1회 | 포트폴리오: 샘플 데이터 사용 |
+| ERP | Kafka 배치 | 일 1회 | 초기에는 샘플 데이터로 시작 |

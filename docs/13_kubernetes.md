@@ -170,7 +170,7 @@ spec:
         lagThreshold: "100"
 ```
 
-> Consumer lag이 100 초과 시 Pod를 자동으로 늘림. JD의 "확장성" 요구사항을 직접 충족.
+> Consumer lag이 100 초과 시 Pod를 자동으로 늘림. 확장성 요구사항을 충족.
 
 ---
 
