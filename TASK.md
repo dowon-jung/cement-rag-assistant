@@ -417,7 +417,30 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
   - Docker Compose / K8s에 Jaeger 서비스 추가
 - [ ] Grafana 대시보드에 Jaeger 데이터소스 연동
 
-### 에어갭 배포 검증
+### LLM 백엔드 선택 전략 — 고객 보안 요구 수준별 대응
+
+고객사의 보안 정책에 따라 LLM 백엔드를 환경변수 하나로 전환할 수 있도록 설계합니다.
+
+```
+LLM_BACKEND=local      완전 온프레미스 (Ollama/vLLM) — 데이터 외부 유출 없음
+LLM_BACKEND=bedrock    AWS Bedrock Claude — 고객 VPC 안에서만 처리
+LLM_BACKEND=anthropic  Anthropic API — 엔터프라이즈 계약 + 데이터 보존 0일
+```
+
+| 백엔드 | 데이터 외부 전송 | 성능 | 비용 | 적합한 상황 |
+|--------|----------------|------|------|-------------|
+| local (Ollama/vLLM) | ❌ 없음 | 중 | 초기 GPU 비용 | 완전 폐쇄망, 최고 보안 요구 |
+| bedrock | △ AWS VPC 내 격리 | 상 | 사용량 기반 | AWS 사용 고객사 |
+| anthropic | ○ 계약적 보호 | 상 | 사용량 기반 | 엔터프라이즈 계약 체결 시 |
+
+- [ ] LLM 백엔드 추상화 레이어 구현 (`app/core/llm_backend.py`)
+  - `LLM_BACKEND` 환경변수로 백엔드 선택
+  - 동일한 인터페이스로 Ollama / Bedrock / Anthropic API 호출
+  - 백엔드 전환 시 코드 변경 없이 동작
+- [ ] AWS Bedrock Claude 연동 옵션 추가
+  - boto3 기반 Bedrock 클라이언트
+  - VPC 엔드포인트 설정 가이드
+- [ ] 백엔드별 동작 확인 테스트 (`tests/test_llm_backends.py`)
 
 - [ ] 인터넷 완전 차단 환경에서 전체 스택 기동 확인
   - Docker Compose 오프라인 기동 테스트
@@ -526,3 +549,4 @@ Phase 2 (수집)     Phase 3 (Kafka + 인덱싱)
 | Kafka HPA | 11 | Consumer lag 기반 | - | 동적 스케일 아웃 |
 | 에어갭 대응 | 12 | Harbor + Jaeger | - | 제조업 폐쇄망 환경 직접 대응 |
 | AIRGAP_MODE | 12 | 환경변수 분기 | - | 외부 API 없이 완전 동작 |
+| LLM 백엔드 추상화 | 12 | Ollama / Bedrock / Anthropic | - | 고객 보안 수준별 선택 가능 |
