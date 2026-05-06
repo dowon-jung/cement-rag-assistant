@@ -7,12 +7,14 @@
 
 | 문서 | 파일 | 상태 | 선행 조건 |
 |------|------|------|-----------|
-| 데이터 흐름 설계 | `docs/01_data_flow.md` | ⬜ | 없음 — 가장 먼저 |
+| 데이터 흐름 설계 | `docs/01_data_flow.md` | ✅ | 없음 — 가장 먼저 |
 | DB 스키마 설계 | `docs/02_db_schema.md` | ⬜ | 01 완료 후 |
 | Agent 설계 | `docs/03_agent_design.md` | ⬜ | 01, 02 완료 후 |
 | API 명세 | `docs/04_api_spec.md` | ⬜ | 03 완료 후 |
 | 환경 설정 가이드 | `docs/05_env_setup.md` | ⬜ | 없음 — 병행 가능 |
 | 검색 품질 평가 기준 | `docs/06_eval_criteria.md` | ⬜ | 02, 03 완료 후 |
+| 모델 서빙 비교 설계 | `docs/07_model_serving.md` | ⬜ | 03 완료 후 |
+| 성능 최적화 설계 | `docs/08_performance.md` | ⬜ | 04 완료 후 |
 
 > 설계 문서 완료 기준: 코드 작성자가 문서만 보고 구현 가능한 수준
 
@@ -34,19 +36,29 @@
   - LangGraph 상태(State) 정의
   - Router 분류 기준 및 프롬프트
   - Tool별 입출력 스펙
-  - 복합 질의 처리 전략
+  - 복합 질의 병렬 처리 전략 (LangGraph Send API)
 - [ ] `docs/04_api_spec.md` 작성
   - 전체 엔드포인트 목록
   - 요청/응답 스키마 (Pydantic 모델 기준)
+  - SSE(Server-Sent Events) 스트리밍 엔드포인트 설계
   - 에러 코드 정의
 - [ ] `docs/05_env_setup.md` 작성
   - 필요한 API 키 목록 및 발급 방법
   - .env.example 파일 구성
   - Docker Compose 서비스 구성
 - [ ] `docs/06_eval_criteria.md` 작성
-  - RAG 검색 품질 평가 지표 (MRR, NDCG, Hit Rate)
-  - 평가용 질의-정답 셋 (골든 셋) 구성 방법
-  - 기준점(baseline) 정의
+  - RAG 검색 품질 평가 지표 (Faithfulness, Answer Relevancy, Context Recall)
+  - RAGAS 프레임워크 활용 방법
+  - 청킹 전략 A/B 비교 실험 설계
+  - 골든 셋 구성 방법
+- [ ] `docs/07_model_serving.md` 작성
+  - Ollama vs vLLM 비교 실험 설계
+  - 측정 지표: TPS, TTFT, 동시 요청 처리량
+  - Gemma4 서빙 환경 구성
+- [ ] `docs/08_performance.md` 작성
+  - 비동기 처리 설계 (asyncio.gather 병렬 API 호출)
+  - LangGraph 병렬 Tool 실행 설계 (Send API)
+  - 순차 vs 병렬 응답 속도 측정 계획
 
 ---
 
@@ -58,9 +70,10 @@
 - [ ] Python 프로젝트 초기화
   - `pyproject.toml` 작성 (의존성 목록)
   - `.env.example` 작성
-  - `.gitignore` 작성 (`.env`, `__pycache__`, `*.pyc` 등)
+  - `.gitignore` 작성
 - [ ] 디렉토리 구조 생성
-  - `app/api/`, `app/agent/tools/`, `app/indexing/chunking/`, `app/data/collectors/`, `app/core/`
+  - `app/api/`, `app/agent/tools/`, `app/indexing/chunking/`
+  - `app/data/collectors/`, `app/core/`, `app/evaluation/`
 - [ ] Docker Compose 기초 구성
   - Qdrant 컨테이너
   - PostgreSQL 컨테이너
@@ -78,15 +91,16 @@
 > 선행 조건: Phase 1 완료, API 키 3개 발급 완료
 
 - [ ] 한국은행 환율 API 수집기 (`app/data/collectors/exchange_api.py`)
-  - ECOS API 호출
+  - async ECOS API 호출 (`httpx` 비동기 클라이언트)
   - PostgreSQL `market_rates` upsert
-  - TTL 캐시 로직
+  - TTL 캐시 로직 (1시간)
 - [ ] 네이버 뉴스 API 수집기 (`app/data/collectors/news_api.py`)
-  - 키워드별 뉴스 호출
+  - async 키워드별 뉴스 호출
+  - 키워드 3개 **병렬** 호출 (`asyncio.gather`)
   - PostgreSQL `news_cache` upsert
-  - TTL 캐시 로직
+  - TTL 캐시 로직 (30분)
 - [ ] 기상청 API 수집기 (`app/data/collectors/weather_api.py`)
-  - 위경도 → 격자 좌표 변환
+  - async 호출, 위경도 → 격자 좌표 변환
   - PostgreSQL `weather_cache` upsert
 - [ ] 유연탄 가격 CSV 수집기 (`app/data/collectors/coal_price.py`)
   - CSV 파싱 및 PostgreSQL `coal_prices` upsert
@@ -107,53 +121,77 @@
   - 배치 임베딩 처리
 - [ ] Semantic chunking 구현 (`app/indexing/chunking/semantic.py`)
   - chunk_size: 512, overlap: 64
-  - RecursiveCharacterTextSplitter 활용
 - [ ] Table-aware chunking 구현 (`app/indexing/chunking/table_aware.py`)
   - 헤더 + N행 단위 청킹
   - payload에 행 메타데이터 포함
 - [ ] 환경부 PDF 인덱싱 (`app/data/collectors/regulation_pdf.py`)
-  - PDF 파싱 → Semantic chunking → Qdrant `regulations` 적재
 - [ ] 유연탄 CSV 인덱싱
-  - Table-aware chunking → Qdrant `coal_prices` 적재
-- [ ] 생산 매뉴얼 / 품질 기준서 인덱싱 (샘플 문서 활용)
+- [ ] 생산 매뉴얼 / 품질 기준서 인덱싱
 - [ ] 인덱싱 파이프라인 오케스트레이터 (`app/indexing/pipeline.py`)
   - `--source all / regulation / coal / manual` 옵션
 
 ---
 
-## Phase 4 — RAG + Hybrid Search
+## Phase 4 — Hybrid Search + 검색 품질 고도화
 
-> 목적: 검색 품질의 핵심인 Hybrid Search 구현
+> 목적: 검색 품질의 핵심 구현 + 수치 기반 성능 증명
 > 선행 조건: Phase 3 완료
 
-- [ ] Vector Search 기본 구현
-  - Qdrant 유사도 검색 (cosine)
-- [ ] BM25 Sparse Search 구현
-  - Qdrant sparse vector 활용 or 별도 BM25 인덱스
+### 기본 구현
+- [ ] Vector Search 기본 구현 (Qdrant cosine)
+- [ ] BM25 Sparse Search 구현 (Qdrant sparse vector)
 - [ ] RRF(Reciprocal Rank Fusion) 결합 구현
-- [ ] Hybrid Search Tool 완성 (`app/agent/tools/hybrid_search.py`)
-- [ ] 검색 품질 평가 스크립트 작성
-  - 골든 셋 기반 MRR, Hit@K 측정
+
+### 고도화 — Re-ranker
+- [ ] Cross-Encoder Re-ranker 추가 (`app/indexing/reranker.py`)
+  - 모델: `cross-encoder/ms-marco-MiniLM-L-6-v2`
+  - Vector+BM25 상위 20개 → Re-ranker → 상위 5개 반환
+  - 적용 전/후 검색 정밀도 비교 측정
+
+### 고도화 — Query Rewriting
+- [ ] Query Rewriting 구현 (`app/agent/query_rewriter.py`)
+  - LLM으로 구어체 질의 → 검색 최적화 질의 변환
+  - 예: "유연탄 요즘 얼마야?" → "유연탄 가격 최근 3개월 추이"
+  - Rewriting 전/후 검색 품질 비교
+
+### 평가 파이프라인
+- [ ] 골든 셋 구성 (`app/evaluation/golden_set.json`)
+  - 질의 20개 + 기대 정답 문서 매핑
+- [ ] RAGAS 기반 평가 스크립트 (`app/evaluation/evaluate.py`)
+  - Faithfulness, Answer Relevancy, Context Recall 측정
+- [ ] 청킹 전략 A/B 비교 실험
+  - chunk_size 256 vs 512 vs 1024 비교
+  - overlap 0 vs 64 비교
+  - 결과를 `docs/eval_results/` 에 저장
 
 ---
 
-## Phase 5 — LangGraph Agent
+## Phase 5 — LangGraph Agent + 병렬 처리
 
-> 목적: 질의 → 데이터 → 응답 전체 흐름 완성
+> 목적: 질의 → 데이터 → 응답 전체 흐름 + 성능 최적화
 > 선행 조건: Phase 2, 4 완료
 
+### 기본 Agent 구현
 - [ ] Router Agent 구현 (`app/agent/router.py`)
-  - 의도 분류 프롬프트 튜닝
 - [ ] 각 Tool 구현
-  - [ ] `exchange_tool.py` — 환율 + 유연탄 원가
-  - [ ] `news_tool.py` — 뉴스 수집 + LLM 요약
-  - [ ] `weather_tool.py` — 날씨 + 수요 예측
-  - [ ] `erp_tool.py` — 생산량 집계 분석
+  - [ ] `exchange_tool.py` — 환율 + 유연탄 원가 (async)
+  - [ ] `news_tool.py` — 뉴스 수집 + LLM 요약 (async)
+  - [ ] `weather_tool.py` — 날씨 + 수요 예측 (async)
+  - [ ] `erp_tool.py` — 생산량 집계 분석 (async)
   - [ ] `regulation_tool.py` — 규제 문서 RAG
-- [ ] LangGraph 워크플로우 연결 (`app/agent/graph.py`)
 - [ ] Answer Synthesizer 구현 (`app/agent/synthesizer.py`)
-  - LLM: Gemma4 (Ollama) 우선, Claude API 선택 가능
-- [ ] 복합 질의 테스트 (예시 질의 5개 이상)
+
+### 고도화 — 병렬 Tool 실행
+- [ ] LangGraph `Send` API로 복합 질의 병렬 처리 구현
+  - 복합 질의 시 Tool들을 병렬 실행
+  - 순차 실행 대비 응답 속도 측정 및 비교
+  - 결과를 `docs/eval_results/parallel_perf.md` 에 기록
+
+### 고도화 — Streaming 응답
+- [ ] LangChain StreamingCallback 연결
+- [ ] FastAPI SSE 엔드포인트 구현 (`POST /chat/stream`)
+  - `StreamingResponse` + `text/event-stream`
+  - 토큰 단위 실시간 출력
 
 ---
 
@@ -166,32 +204,57 @@
   - ApiResponse 공통 래퍼
   - GlobalExceptionHandler
   - CORS 설정
-- [ ] 엔드포인트 구현
-  - [ ] `POST /chat`
-  - [ ] `POST /chat/compare`
-  - [ ] `GET /market/today`
-  - [ ] `GET /news/summary`
-  - [ ] `GET /weather/today`
-  - [ ] `GET /regulations`
+- [ ] 일반 엔드포인트 구현
+  - [ ] `POST /chat` — 일반 질의응답
+  - [ ] `POST /chat/compare` — 전년 대비 비교
+  - [ ] `GET /market/today` — 환율 + 유연탄 원가
+  - [ ] `GET /news/summary` — 최신 뉴스 요약
+  - [ ] `GET /weather/today` — 날씨 + 수요 예측
+  - [ ] `GET /regulations` — 규제 문서 검색
+- [ ] **스트리밍 엔드포인트**
+  - [ ] `POST /chat/stream` — SSE 토큰 스트리밍
 - [ ] Swagger 문서 자동화 확인
 - [ ] 통합 테스트 작성
 
 ---
 
-## Phase 7 — 배포 & 포트폴리오 마무리
+## Phase 7 — 모델 서빙 비교 실험
 
-> 목적: 외부에서 접근 가능한 데모 환경 구성
+> 목적: JD "vLLM 도입 예정" 직접 대응 + 블로그 소재
 > 선행 조건: Phase 6 완료
 
+- [ ] Ollama 환경 구성
+  - Gemma4 모델 로컬 서빙
+  - Docker Compose에 Ollama 서비스 추가
+- [ ] vLLM 환경 구성 (GPU 서버 필요 시 Colab/RunPod 활용)
+  - Gemma4 vLLM 서빙
+  - continuous batching 설정
+- [ ] 비교 측정 스크립트 (`scripts/benchmark_llm.py`)
+  - 측정 지표: TPS(Tokens/sec), TTFT(Time To First Token)
+  - 동시 요청 1 / 5 / 10개 시나리오
+- [ ] 결과 정리 (`docs/eval_results/llm_serving_benchmark.md`)
+
+---
+
+## Phase 8 — 배포 & 포트폴리오 마무리
+
+> 목적: 외부에서 접근 가능한 데모 환경 구성
+> 선행 조건: Phase 7 완료
+
 - [ ] Dockerfile 작성
-- [ ] Docker Compose 전체 구성 완성 (App + Qdrant + PostgreSQL)
+- [ ] Docker Compose 전체 구성 (App + Qdrant + PostgreSQL + Ollama)
 - [ ] AWS EC2 or Render 배포
 - [ ] Streamlit 데모 UI 작성 (`streamlit_app.py`)
-- [ ] README 최종 정리 (설계 문서 링크 포함)
+  - 스트리밍 응답 실시간 출력
+  - 일반 vs 스트리밍 응답 비교 탭
+- [ ] README 최종 정리
+  - 설계 문서 링크
+  - 실험 결과 요약 (검색 품질 / 응답 속도 / LLM 서빙)
 - [ ] 기술 블로그 포스팅
-  - [ ] 청킹 전략별 검색 품질 비교 실험기
-  - [ ] LangGraph로 Multi-Tool RAG 구현하기
-  - [ ] 환율 + 유연탄 가격으로 시멘트 원가 분석하기
+  - [ ] 청킹 전략 A/B 비교 + RAGAS 평가 실험기
+  - [ ] Re-ranker 도입 전후 검색 정밀도 비교
+  - [ ] LangGraph Send API로 병렬 Tool 실행 구현하기
+  - [ ] Ollama vs vLLM — Gemma4 서빙 성능 비교
 
 ---
 
@@ -203,20 +266,35 @@ Phase 0 (설계)
     ▼
 Phase 1 (뼈대)
     │
-    ├─────────────────┐
-    ▼                 ▼
-Phase 2 (수집)    Phase 3 (인덱싱)
-    │                 │
-    └────────┬────────┘
+    ├──────────────────┐
+    ▼                  ▼
+Phase 2 (수집)     Phase 3 (인덱싱)
+    │                  │
+    └────────┬──────────┘
              ▼
-         Phase 4 (RAG)
+         Phase 4 (Hybrid Search + 평가)
              │
              ▼
-         Phase 5 (Agent)
+         Phase 5 (Agent + 병렬 + 스트리밍)
              │
              ▼
-         Phase 6 (API)
+         Phase 6 (FastAPI)
              │
              ▼
-         Phase 7 (배포)
+         Phase 7 (모델 서빙 비교)
+             │
+             ▼
+         Phase 8 (배포 + 마무리)
 ```
+
+## 고도화 항목 요약
+
+| 항목 | Phase | 기술 | 어필 포인트 |
+|------|-------|------|-------------|
+| Re-ranker | 4 | Cross-Encoder | 검색 정밀도 수치 비교 |
+| Query Rewriting | 4 | LLM 전처리 | 구어체 질의 대응 |
+| RAGAS 평가 | 4 | Faithfulness / Relevancy | 설계 결정 수치로 증명 |
+| 청킹 A/B 실험 | 4 | chunk_size / overlap 비교 | 블로그 소재 |
+| 병렬 Tool 실행 | 5 | LangGraph Send API | 응답 속도 개선 수치 |
+| SSE 스트리밍 | 5, 6 | FastAPI StreamingResponse | 실서비스 수준 UX |
+| vLLM vs Ollama | 7 | TPS / TTFT 비교 | JD 직접 대응 |
