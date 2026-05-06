@@ -21,6 +21,7 @@
 | 12 | Kafka 이벤트 스트리밍 설계 | `docs/12_kafka.md` | ✅ | 01, 02 |
 | 13 | Kubernetes 배포 설계 | `docs/13_kubernetes.md` | ✅ | 11, 12 |
 | 14 | 온프레미스 / 에어갭 설계 | `docs/14_airgap.md` | ✅ | 05, 13 |
+| 15 | 하드웨어 스펙 가이드 | `docs/15_hardware_spec.md` | ✅ | 05, 07 |
 
 > 설계 문서 완료 기준: 코드 작성자가 문서만 보고 구현 가능한 수준
 
