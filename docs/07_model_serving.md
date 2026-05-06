@@ -159,7 +159,7 @@ class AnthropicBackend:
     
     async def stream(self, messages: list[dict]) -> AsyncIterator[str]:
         async with self.client.messages.stream(
-            model="claude-opus-4-7",
+            model="claude-sonnet-4-5",
             max_tokens=1024,
             messages=messages,
         ) as stream:

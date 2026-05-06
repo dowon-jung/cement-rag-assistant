@@ -36,6 +36,7 @@ metadata:
 | Kafka | StatefulSet | 영속 데이터 (KRaft 모드) |
 | Redis | Deployment | 캐시 (영속 옵션) |
 | Ollama | Deployment | GPU 노드 affinity |
+| vLLM | Deployment | GPU 노드 affinity, OpenAI 호환 |
 | Prometheus | StatefulSet | TSDB |
 | Grafana | Deployment | 설정만 ConfigMap |
 | Jaeger | Deployment | 트레이스 (옵션 영속화) |
@@ -311,7 +312,61 @@ spec:
 
 ---
 
-## 9. Service 정의
+## 9. vLLM Deployment (GPU 노드)
+
+```yaml
+# k8s/vllm/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  namespace: cement-rag
+spec:
+  replicas: 1
+  template:
+    spec:
+      nodeSelector:
+        accelerator: gpu
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: vllm
+          image: harbor.internal/cement-rag/vllm:latest
+          args:
+            - "--model"
+            - "/models/gemma2-9b"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8001"
+            - "--gpu-memory-utilization"
+            - "0.9"
+            - "--max-model-len"
+            - "4096"
+          ports:
+            - containerPort: 8001
+          resources:
+            requests:
+              cpu: 4000m
+              memory: 16Gi
+              nvidia.com/gpu: 1
+            limits:
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: models
+              mountPath: /models
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: vllm-models
+```
+
+> LLM_BACKEND=vllm 시 VLLM_HOST 환경변수로 이 서비스를 가리킵니다.
+> Ollama와 vLLM 중 환경에 맞게 하나만 기동하거나 둘 다 기동 후 LLM_BACKEND로 전환할 수 있습니다.
+
+## 10. Service 정의
 
 ```yaml
 # k8s/app/service.yaml
@@ -346,7 +401,7 @@ spec:
 
 ---
 
-## 10. ConfigMap 및 Secret
+## 11. ConfigMap 및 Secret
 
 ### ConfigMap (설정값)
 
@@ -387,7 +442,7 @@ kubectl create secret generic cement-rag-secrets \
 
 ---
 
-## 11. Ingress
+## 12. Ingress
 
 ```yaml
 # k8s/ingress.yaml
@@ -421,7 +476,7 @@ spec:
 
 ---
 
-## 12. PersistentVolume 전략
+## 13. PersistentVolume 전략
 
 | 서비스 | 용도 | 크기 | StorageClass |
 |--------|------|------|--------------|
@@ -434,7 +489,7 @@ spec:
 
 ---
 
-## 13. 배포 순서
+## 14. 배포 순서
 
 ```bash
 # 1. 네임스페이스
@@ -469,7 +524,7 @@ kubectl apply -f k8s/ingress.yaml
 
 ---
 
-## 14. 롤링 업데이트 전략
+## 15. 롤링 업데이트 전략
 
 ```yaml
 spec:
@@ -489,7 +544,7 @@ kubectl rollout history deployment/cement-rag-app -n cement-rag
 
 ---
 
-## 15. 배포 검증 체크리스트
+## 16. 배포 검증 체크리스트
 
 - [ ] 모든 Pod Running 상태 확인 (`kubectl get pods -n cement-rag`)
 - [ ] 헬스체크 `/health` 200 응답
@@ -504,7 +559,7 @@ kubectl rollout history deployment/cement-rag-app -n cement-rag
 
 ---
 
-## 16. 부하 테스트 시나리오
+## 17. 부하 테스트 시나리오
 
 ```bash
 # locust로 K8s 환경에 부하

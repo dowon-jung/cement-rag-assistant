@@ -11,9 +11,9 @@ PostgreSQL (수치 · 캐시 영구화 · ERP)
 └── production_logs    ERP 생산 로그
 
 Redis (휘발성 캐시)
-├── exchange:usd_krw:{date}        TTL 1h
-├── news:{keyword}:{date_hour}     TTL 30m
-└── weather:{nx}_{ny}:{date_time}  TTL 1h
+├── exchange:usd_krw:{YYYYMMDD}        TTL 1h
+├── news:{keyword}:{YYYYMMDD_HH}       TTL 30m
+└── weather:{nx}_{ny}:{YYYYMMDD_HHmm}  TTL 1h
 
 Qdrant (벡터 검색)
 ├── regulations         환경부 규제 문서

@@ -18,7 +18,7 @@
 
 | Topic | 용도 | 파티션 | Retention | Producer | Consumer |
 |-------|------|--------|-----------|----------|----------|
-| `market.raw` | 환율 수집 이벤트 | 3 | 7d | exchange_collector | market_consumer |
+| `market.raw` | 환율 수집 이벤트 | 3 | 7d | exchange_collector | monitoring_consumer (로깅·알림 전용) |
 | `news.raw` | 뉴스 수집 이벤트 | 3 | 7d | news_collector | llm_consumer |
 | `weather.raw` | 날씨 수집 이벤트 | 3 | 3d | weather_collector | weather_consumer |
 | `erp.updated` | ERP 배치 완료 | 1 | 14d | erp_batch | erp_consumer |
@@ -76,6 +76,8 @@ class KafkaMessage(BaseModel):
     "collected_at": "2025-05-06T11:00:00"
 }
 ```
+> market.raw는 별도 처리 Consumer가 없습니다. 환율 데이터는 수집 시점에 이미 PostgreSQL에 저장되며,
+> market.raw 토픽은 **모니터링·알림 전용**입니다. (예: 환율 급변 감지 시 Alertmanager 연동)
 
 #### news.raw
 ```python

@@ -18,17 +18,17 @@
   의도 분류 → Sub-Agent 선택
     │
     ├─ Market Agent  ─┐
-    ├─ News Agent    ─┤
-    ├─ RAG Agent     ─┤  (LangGraph Send API 병렬 실행)
+    ├─ News Agent    ─┤  (LangGraph Send API 병렬 실행)
+    ├─ RAG Agent     ─┤
     └─ ERP Agent     ─┘
-    │
-    ▼
-[Self-RAG Loop]
-  검색 결과 자가 평가 → 불충분 시 재검색 (최대 3회)
+    │         ↑
+    │    RAG Agent 내부에서만 Self-RAG 루프 실행
+    │    (검색 결과 자가 평가 → 불충분 시 재검색, 최대 3회)
+    │    다른 Sub-Agent(Market, News, ERP)는 Self-RAG 미적용
     │
     ▼
 [Answer Synthesizer]
-  결과 통합 → LLM 답변 생성
+  Sub-Agent 결과 통합 → LLM 답변 생성
     │
     ▼
 사용자 응답 (SSE 스트리밍)
@@ -103,13 +103,16 @@ JSON 응답:
 
 | 의도 | 키워드 패턴 | 호출 Sub-Agent |
 |------|-------------|----------------|
-| market | 환율, 달러, 유연탄, 원가, 비용 | Market Agent |
+| market | 환율, 달러, 유연탄, 원가, 비용, 날씨, 기온, 강수, 수요 예측 | Market Agent |
 | news | 뉴스, 최신, 동향, 시황 | News Agent |
-| weather | 날씨, 기온, 강수, 수요 예측 | (Market Agent에 통합) |
 | production | 생산량, 재고, 전년 대비, 실적 | ERP Agent |
 | regulation | 규제, 기준, 법령, 적합, 허용치 | RAG Agent |
 | manual | 매뉴얼, 절차, 방법, 양생 | RAG Agent |
 | composite | 위 의도 2개 이상 혼합 | 다중 Sub-Agent 병렬 호출 |
+
+> 날씨(weather) 의도는 Market Agent에 통합합니다.
+> 날씨는 단독 질의보다 "날씨 → 수요 예측 → 원가 영향" 흐름으로 Market Agent와 함께 사용되는 경우가 대부분이기 때문입니다.
+> `/weather/today` API 엔드포인트는 내부적으로 Market Agent를 통해 응답합니다.
 
 ### 분류 프롬프트
 ```python

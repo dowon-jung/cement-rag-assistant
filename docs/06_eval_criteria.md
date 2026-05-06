@@ -61,7 +61,18 @@
     "category": "composite",
     "complexity": "complex",
     "expected_agents": ["market_agent"],
-    "expected_data_sources": ["market_rates", "coal_prices"]
+    "expected_data_sources": ["market_rates", "coal_prices"],
+    "ground_truth": null,
+    "eval_method": "agent_trace",
+    "eval_criteria": {
+      "note": "ground_truth 없는 복합 질의는 RAGAS 대신 Agent 트레이스 기반 평가",
+      "checks": [
+        "market_agent 호출 여부",
+        "market_rates + coal_prices 양쪽 조회 여부",
+        "응답에 환율 수치 포함 여부",
+        "응답에 원가 변동률 포함 여부"
+      ]
+    }
   }
 ]
 ```
