@@ -20,6 +20,7 @@
 | 11 | 모니터링 설계 | `docs/11_monitoring.md` | ⬜ | 04 |
 | 12 | Kafka 이벤트 스트리밍 설계 | `docs/12_kafka.md` | ⬜ | 01, 02 |
 | 13 | Kubernetes 배포 설계 | `docs/13_kubernetes.md` | ⬜ | 11, 12 |
+| 14 | 온프레미스 / 에어갭 설계 | `docs/14_airgap.md` | ⬜ | 05, 13 |
 
 > 설계 문서 완료 기준: 코드 작성자가 문서만 보고 구현 가능한 수준
 
@@ -87,6 +88,12 @@
   - HPA(HorizontalPodAutoscaler) 설정 기준
   - ConfigMap / Secret 관리 전략
   - Ingress 설계
+- [ ] `docs/14_airgap.md` 작성
+  - 외부 의존성 목록 및 내부화 전략
+  - 모델 사전 반입 절차 (ko-sroberta, Gemma4)
+  - Harbor 내부 레지스트리 구성
+  - LangSmith → Jaeger + OpenTelemetry 대체
+  - 실시간 API 대체 전략 (내부 DB 사전 적재)
 
 ---
 
@@ -360,10 +367,73 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 
 ---
 
-## Phase 12 — 포트폴리오 마무리
+## Phase 12 — 온프레미스 / 에어갭 대응
+
+> 목적: 인터넷 차단 폐쇄망 환경에서도 전체 스택 동작
+> 선행 조건: Phase 11 완료
+> 어필 포인트: 제조업 고객사 보안 환경 직접 대응 가능
+
+### 외부 의존성 내부화
+
+- [ ] HuggingFace 모델 사전 반입 (`scripts/download_models.py`)
+  - `jhgan/ko-sroberta-multitask` → `./models/ko-sroberta/` 로컬 저장
+  - `cross-encoder/ms-marco-MiniLM-L-6-v2` → `./models/reranker/` 로컬 저장
+  - 모델 로더가 로컬 경로 우선 참조하도록 수정
+- [ ] Ollama / vLLM 모델 사전 반입
+  - Gemma4 모델 파일 내부망 서버로 복사
+  - `ollama create` 로컬 모델 등록 스크립트 작성
+- [ ] Harbor 내부 컨테이너 레지스트리 구성
+  - 모든 Docker 이미지 사전 pull → Harbor push
+  - `docker-compose.yml` / K8s 매니페스트 이미지 경로 변경
+    ```yaml
+    # 변경 전
+    image: qdrant/qdrant:latest
+    # 변경 후
+    image: harbor.internal/cement-rag/qdrant:latest
+    ```
+- [ ] Python 패키지 내부 미러 구성
+  - pip 내부 PyPI 미러 (devpi or Nexus)
+  - `pyproject.toml` 에 내부 인덱스 URL 추가
+
+### 실시간 API 대체 전략
+
+외부 API를 사용할 수 없으므로 내부 데이터로 대체합니다.
+
+| 외부 API | 에어갭 대체 방안 |
+|----------|-----------------|
+| 한국은행 환율 API | 사전 수집 환율 CSV → PostgreSQL 적재 후 주기적 수동 갱신 |
+| 네이버 뉴스 API | 내부 RSS 피드 or 샘플 뉴스 데이터 |
+| 기상청 Open API | 기상청 FTP 내부망 연동 or 지역 기상 데이터 CSV 적재 |
+
+- [ ] 에어갭 모드 환경변수 추가 (`AIRGAP_MODE=true`)
+  - `true` 시 외부 API 호출 대신 내부 DB 조회로 자동 전환
+  - 수집기 코드 분기 처리
+
+### 모니터링 대체
+
+- [ ] LangSmith → **Jaeger + OpenTelemetry** 대체
+  - FastAPI + LangChain에 OpenTelemetry 계측 추가
+  - Jaeger UI로 Agent 실행 트레이스 시각화
+  - Docker Compose / K8s에 Jaeger 서비스 추가
+- [ ] Grafana 대시보드에 Jaeger 데이터소스 연동
+
+### 에어갭 배포 검증
+
+- [ ] 인터넷 완전 차단 환경에서 전체 스택 기동 확인
+  - Docker Compose 오프라인 기동 테스트
+  - K8s 오프라인 배포 테스트
+- [ ] `AIRGAP_MODE=true` 상태로 예시 질의 5개 정상 동작 확인
+- [ ] 에어갭 배포 가이드 문서 작성 (`docs/airgap_deploy_guide.md`)
+  - 반입 파일 목록 (모델, 이미지, 패키지)
+  - 단계별 설치 절차
+  - 트러블슈팅 가이드
+
+---
+
+## Phase 13 — 포트폴리오 마무리
 
 > 목적: 외부 접근 가능한 데모 + 문서 완성
-> 선행 조건: Phase 11 완료
+> 선행 조건: Phase 12 완료
 
 - [ ] Streamlit 데모 UI (`streamlit_app.py`)
   - 일반 응답 vs SSE 스트리밍 응답 비교 탭
@@ -382,7 +452,7 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
   - [ ] LangGraph Send API로 병렬 Multi-Agent 구현하기
   - [ ] Self-RAG / Adaptive RAG 구현기
   - [ ] Ollama vs vLLM Gemma4 서빙 성능 비교
-  - [ ] Kubernetes로 RAG 시스템 오케스트레이션하기
+  - [ ] 폐쇄망 온프레미스 환경에서 AI 시스템 구축하기
 
 ---
 
@@ -424,7 +494,10 @@ Phase 2 (수집)     Phase 3 (Kafka + 인덱싱)
                       Phase 11 (Kubernetes)
                                │
                                ▼
-                      Phase 12 (마무리)
+                      Phase 12 (에어갭 대응)
+                               │
+                               ▼
+                      Phase 13 (마무리)
 ```
 
 ---
@@ -451,3 +524,5 @@ Phase 2 (수집)     Phase 3 (Kafka + 인덱싱)
 | LangSmith | 10 | 트레이싱 | - | 디버깅 + 데모 품질 |
 | Kubernetes | 11 | K8s + HPA | - | 프로덕션 오케스트레이션 |
 | Kafka HPA | 11 | Consumer lag 기반 | - | 동적 스케일 아웃 |
+| 에어갭 대응 | 12 | Harbor + Jaeger | - | 제조업 폐쇄망 환경 직접 대응 |
+| AIRGAP_MODE | 12 | 환경변수 분기 | - | 외부 API 없이 완전 동작 |

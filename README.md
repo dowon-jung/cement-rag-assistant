@@ -120,6 +120,7 @@
 | **컨테이너** | Docker, Docker Compose |
 | **오케스트레이션** | Kubernetes (minikube → EKS/GKE), HPA |
 | **평가** | RAGAS (Faithfulness, Answer Relevancy, Context Recall) |
+| **에어갭 대응** | Harbor 내부 레지스트리, Jaeger + OpenTelemetry, 오프라인 모델 서빙 |
 
 ---
 
@@ -266,6 +267,11 @@ Kafka로 분리하면 **수집과 처리가 완전히 디커플링**되고, Dead
 Kafka Consumer lag이 쌓일 때 Consumer Pod를 자동으로 스케일 아웃하면  
 **인덱싱 파이프라인 처리량을 부하에 따라 탄력적으로 조정**할 수 있습니다.
 
+### 왜 에어갭 대응인가?
+시멘트·철강 등 제조업 고객사는 보안 정책상 **인터넷이 차단된 폐쇄망 환경**이 일반적입니다.  
+Harbor 내부 레지스트리, 오프라인 모델 서빙(Ollama), Jaeger 트레이싱으로 외부 의존성을 전부 내부화하여  
+`AIRGAP_MODE=true` 하나로 폐쇄망 전환이 가능하도록 설계했습니다.
+
 ---
 
 ## 📊 개발 로드맵
@@ -284,7 +290,8 @@ Kafka Consumer lag이 쌓일 때 Consumer Pod를 자동으로 스케일 아웃�
 | 9 | 모델 서빙 비교 | vLLM vs Ollama 벤치마크 |
 | 10 | 모니터링 | Prometheus, Grafana, LangSmith |
 | 11 | Kubernetes | HPA, StatefulSet, Ingress |
-| 12 | 마무리 | Streamlit 데모, 블로그 포스팅 |
+| 12 | 온프레미스 / 에어갭 | Harbor, Jaeger, AIRGAP_MODE, 오프라인 모델 |
+| 13 | 마무리 | Streamlit 데모, 블로그 포스팅 |
 
 ---
 
