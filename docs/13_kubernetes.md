@@ -34,7 +34,7 @@ metadata:
 | PostgreSQL | StatefulSet | 영속 데이터 |
 | Neo4j | StatefulSet | 영속 데이터 |
 | Kafka | StatefulSet | 영속 데이터 (KRaft 모드) |
-| Redis | Deployment | 캐시 (영속 옵션) |
+| Elasticsearch | StatefulSet | 영속 데이터, nori 플러그인 |
 | Ollama | Deployment | GPU 노드 affinity |
 | vLLM | Deployment | GPU 노드 affinity, OpenAI 호환 |
 | Prometheus | StatefulSet | TSDB |
@@ -481,6 +481,7 @@ spec:
 | 서비스 | 용도 | 크기 | StorageClass |
 |--------|------|------|--------------|
 | PostgreSQL | DB 데이터 | 50Gi | standard |
+| Elasticsearch | 인덱스 데이터 | 30Gi | standard |
 | Qdrant | 벡터 인덱스 | 50Gi | standard |
 | Neo4j | 그래프 데이터 | 20Gi | standard |
 | Kafka | 메시지 로그 | 100Gi (3개) | fast-ssd |
@@ -501,6 +502,7 @@ kubectl apply -f k8s/config/
 # 3. 인프라 (StatefulSet)
 kubectl apply -f k8s/postgres/
 kubectl apply -f k8s/redis/
+kubectl apply -f k8s/elasticsearch/
 kubectl apply -f k8s/qdrant/
 kubectl apply -f k8s/neo4j/
 kubectl apply -f k8s/kafka/

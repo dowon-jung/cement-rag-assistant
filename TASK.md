@@ -114,7 +114,7 @@
   - `app/kafka/` — Producer / Consumer
   - `k8s/` — Kubernetes 매니페스트
 - [ ] Docker Compose 기초 구성
-  - Qdrant, PostgreSQL, Redis, Neo4j, Kafka(KRaft), Zookeeper 컨테이너
+  - Qdrant, PostgreSQL, Redis, Neo4j, Elasticsearch, Kafka(KRaft) 컨테이너
 - [ ] `app/core/config.py` 작성
   - pydantic-settings 기반 환경변수 로딩
 - [ ] DB 초기화 스크립트
@@ -122,6 +122,7 @@
   - `scripts/init_qdrant.py` — Qdrant 컬렉션 생성
   - `scripts/init_neo4j.py` — Neo4j 제약조건 및 인덱스 생성
   - `scripts/init_kafka.py` — Kafka Topic 생성
+  - `scripts/init_elasticsearch.py` — nori 플러그인 + 인덱스 생성
 
 ---
 
@@ -210,8 +211,8 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 
 ### 기본 Hybrid Search
 - [ ] Vector Search (Qdrant cosine)
-- [ ] BM25 Sparse Search (Qdrant sparse vector)
-- [ ] RRF(Reciprocal Rank Fusion) 결합
+- [ ] BM25 키워드 Search (**Elasticsearch + nori 형태소 분석**)
+- [ ] RRF(Reciprocal Rank Fusion) 결합 (Qdrant 결과 + ES 결과 통합)
 
 ### Re-ranker
 - [ ] Cross-Encoder Re-ranker (`app/indexing/reranker.py`)
@@ -347,6 +348,7 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
   - [ ] `k8s/qdrant/` — Qdrant (StatefulSet)
   - [ ] `k8s/postgres/` — PostgreSQL (StatefulSet)
   - [ ] `k8s/redis/` — Redis
+  - [ ] `k8s/elasticsearch/` — Elasticsearch (StatefulSet, nori 플러그인)
   - [ ] `k8s/neo4j/` — Neo4j (StatefulSet)
   - [ ] `k8s/kafka/` — Kafka (KRaft 모드, StatefulSet)
   - [ ] `k8s/ollama/` — Ollama LLM 서빙 (CPU / 소규모 GPU)
@@ -535,6 +537,7 @@ Phase 2 (수집)     Phase 3 (Kafka + 인덱싱)
 | Redis 캐시 | 2 | Redis TTL | - | 실서비스 캐시 패턴 |
 | Kafka 이벤트 파이프라인 | 3 | aiokafka | - | 수집·처리 디커플링 |
 | Kafka DLQ | 3 | Dead Letter Queue | - | 장애 격리 및 재처리 |
+| Elasticsearch BM25 | 4 | Elasticsearch + nori | - | 한국어 형태소 분석 기반 키워드 검색 |
 | Re-ranker | 4 | Cross-Encoder | - | 검색 정밀도 수치 비교 |
 | Query Rewriting | 4 | LLM 전처리 | - | 구어체 질의 대응 |
 | RAGAS 평가 | 4 | Faithfulness 등 | - | 설계 결정 수치 증명 |

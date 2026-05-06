@@ -109,6 +109,22 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    ports: ["9200:9200"]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    ports: ["5601:5601"]
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
   neo4j:
     image: neo4j:5-community
     ports: ["7474:7474", "7687:7687"]
@@ -166,6 +182,7 @@ volumes:
   qdrant_data:
   neo4j_data:
   ollama_data:
+  es_data:
 ```
 
 ---
@@ -191,6 +208,7 @@ psql -h localhost -U cement -d cement_rag -f scripts/init_db.sql
 python scripts/init_qdrant.py
 python scripts/init_neo4j.py
 python scripts/init_kafka.py
+python scripts/init_elasticsearch.py   # nori 플러그인 + 인덱스 생성
 
 # 5. Python 패키지 설치
 pip install -e ".[dev]"
@@ -219,6 +237,8 @@ streamlit run streamlit_app.py
 | PostgreSQL | 5432 | DB |
 | Redis | 6379 | 캐시 |
 | Qdrant | 6333 | Vector DB (HTTP), 6334 (gRPC) |
+| Elasticsearch | 9200 | REST API |
+| Kibana | 5601 | 인덱스 관리 UI |
 | Neo4j | 7474, 7687 | UI, Bolt |
 | Kafka | 9092 | Broker |
 | Ollama | 11434 | LLM 서빙 |
@@ -249,9 +269,10 @@ dependencies = [
     "langgraph>=0.2.0",
     "langsmith>=0.1.0",
     
-    # Vector / Graph DB
+    # Vector / Graph / Search DB
     "qdrant-client>=1.12.0",
     "neo4j>=5.25.0",
+    "elasticsearch>=8.13.0",
     
     # SQL / Cache
     "sqlalchemy>=2.0.0",

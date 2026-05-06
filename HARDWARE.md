@@ -85,6 +85,29 @@
 
 ---
 
+### Elasticsearch (nori 형태소 분석)
+
+| 항목 | 최소 | 권장 | 비고 |
+|------|------|------|------|
+| CPU | 2코어 | 4코어 | |
+| RAM | 4GB | 8GB | JVM 힙 = RAM의 50% 권장 |
+| 디스크 | 30GB SSD | 100GB SSD | 문서 인덱스 + 세그먼트 |
+
+```
+예상 인덱스 크기:
+  regulations:       ~50MB
+  manuals:           ~100MB
+  coal_prices:       ~20MB
+  quality_standards: ~30MB
+  총합 (여유 포함):  ~1GB
+  → 30GB면 충분
+```
+
+> Elasticsearch는 JVM 기반으로 RAM 부족 시 성능이 급격히 저하됩니다.
+> 최소 4GB RAM 확보를 권장합니다.
+
+---
+
 ### Neo4j
 
 | 항목 | 최소 | 권장 | 비고 |
@@ -222,7 +245,7 @@ LLM:     Ollama + Gemma2:9b (CPU)
 
 서버 1대 구성:
   CPU:    16코어 (Intel Xeon or AMD EPYC)
-  RAM:    64GB ECC
+  RAM:    64GB ECC  ← Elasticsearch 4GB 포함
   디스크: 1TB NVMe SSD
   네트워크: 1Gbps
 
@@ -265,15 +288,16 @@ LLM:     vLLM + Gemma2:9b (GPU)
 구성 요소별 예상 디스크 사용량:
   PostgreSQL:          50GB
   Qdrant:              10GB
+  Elasticsearch:       30GB
   Neo4j:                5GB
   Kafka (30일 보존):  100GB
   Prometheus (90일):   20GB
   LLM 모델 파일:       20GB
   Embedding 모델:       2GB
   앱 로그:             10GB
-  여유 공간 (30%):     65GB
+  여유 공간 (30%):     75GB
   ─────────────────────────
-  합계:               ~280GB
+  합계:               ~320GB
 
 권장 구성: 500GB NVMe SSD
 ```

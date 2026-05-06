@@ -173,7 +173,7 @@ docs/eval_results/{date}_{config_hash}.md
 | 실험 | 검색 방식 | 측정 |
 |------|-----------|------|
 | Baseline | Vector only | MRR@5, Hit@1 |
-| +BM25 | Hybrid Search | 동일 |
+| +ES BM25 | Vector + Elasticsearch(nori) Hybrid | 동일 |
 | +Re-ranker | Hybrid + Cross-Encoder | 동일 |
 
 **가설**: Re-ranker가 상위 K개 정밀도를 크게 향상

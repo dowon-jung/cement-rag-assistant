@@ -15,9 +15,15 @@ Redis (휘발성 캐시)
 ├── news:{keyword}:{YYYYMMDD_HH}       TTL 30m
 └── weather:{nx}_{ny}:{YYYYMMDD_HHmm}  TTL 1h
 
-Qdrant (벡터 검색)
+Qdrant (벡터 검색 전용)
 ├── regulations         환경부 규제 문서
 ├── coal_prices         유연탄 가격 (의미 검색)
+├── manuals             생산 매뉴얼
+└── quality_standards   품질검사 기준서
+
+Elasticsearch (한국어 형태소 BM25 검색)
+├── regulations         환경부 규제 문서 (nori 분석)
+├── coal_prices         유연탄 가격
 ├── manuals             생산 매뉴얼
 └── quality_standards   품질검사 기준서
 
@@ -126,13 +132,10 @@ vectors_config = VectorParams(
     size=768,                    # ko-sroberta 출력 차원
     distance=Distance.COSINE
 )
+```
 
-# Sparse Vector (BM25용) 추가
-sparse_vectors_config = {
-    "bm25": SparseVectorParams(
-        index=SparseIndexParams(on_disk=False)
-    )
-}
+> BM25 키워드 검색은 Qdrant Sparse Vector 대신 **Elasticsearch(nori 형태소 분석)**로 처리합니다.
+> 한국어 도메인 특성상 형태소 분석 기반 검색이 Sparse Vector보다 정밀도가 높기 때문입니다.
 ```
 
 ### regulations (환경부 규제)
@@ -185,7 +188,63 @@ payload_schema = {
 
 ---
 
-## 5. Neo4j 그래프 스키마
+## 5. Elasticsearch 인덱스 정의
+
+### 공통 설정 (nori 형태소 분석기)
+
+```json
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "korean": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": ["nori_part_of_speech", "lowercase"]
+        }
+      }
+    }
+  }
+}
+```
+
+### regulations 인덱스
+
+```json
+{
+  "mappings": {
+    "properties": {
+      "text":       { "type": "text", "analyzer": "korean" },
+      "law_name":   { "type": "keyword" },
+      "article":    { "type": "keyword" },
+      "page":       { "type": "integer" },
+      "chunk_index":{ "type": "integer" },
+      "updated_at": { "type": "date" }
+    }
+  }
+}
+```
+
+### manuals / coal_prices / quality_standards 인덱스
+
+```json
+{
+  "mappings": {
+    "properties": {
+      "text":         { "type": "text", "analyzer": "korean" },
+      "source":       { "type": "keyword" },
+      "section":      { "type": "keyword" },
+      "page":         { "type": "integer" },
+      "chunk_index":  { "type": "integer" },
+      "product_type": { "type": "keyword" }
+    }
+  }
+}
+```
+
+---
+
+## 6. Neo4j 그래프 스키마
 
 ### 노드 타입
 ```cypher
@@ -239,8 +298,8 @@ CREATE (s)-[:APPLIES_TO]->(p)
 | "최신 시멘트 뉴스" | Redis → PostgreSQL → API | TTL 캐시 우선 |
 | "이번 달 생산량 vs 전년" | PostgreSQL | GROUP BY + 집계 |
 | "유연탄 가격 추이" | PostgreSQL | 시계열 SELECT |
-| "환경부 질소산화물 기준" | Qdrant (Hybrid Search) | Vector + BM25 + RRF |
-| "시멘트 양생 온도 기준" | Qdrant (manuals) | Vector Search |
+| "환경부 질소산화물 기준" | Qdrant + Elasticsearch | Vector + BM25(nori) + RRF |
+| "시멘트 양생 온도 기준" | Qdrant + Elasticsearch | Vector + BM25(nori) + RRF |
 | "원화 기준 유연탄 원가" | PostgreSQL JOIN | exchange + coal JOIN |
 | "질소산화물 초과 시 연쇄 조항" | Neo4j Cypher | DEPENDS_ON 관계 탐색 |
-| "복합 규제 질의" | Neo4j + Qdrant | Graph + Vector 결합 |
+| "복합 규제 질의" | Neo4j + Qdrant + Elasticsearch | Graph + Hybrid 결합 |

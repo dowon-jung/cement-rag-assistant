@@ -40,7 +40,7 @@ exchange, news, weather = await asyncio.gather(
 |------|------|
 | 네이버 뉴스 키워드 3개 호출 | 3x 단축 |
 | Market Agent 내부 (환율 + 유연탄 + 날씨) | 2~3x 단축 |
-| Hybrid Search (Vector + BM25) | 2x 단축 |
+| Hybrid Search (Vector + Elasticsearch BM25) | 2x 단축 |
 
 ---
 

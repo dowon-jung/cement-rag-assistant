@@ -134,7 +134,7 @@ RAG 구조 자체는 동일해요. **LLM이 어디 있느냐**가 다를 뿐이�
 │                    RAG 검색 레이어                                    │
 │  Adaptive RAG   질의 난이도 → 검색 전략 동적 분기                    │
 │    단순 질의  → Vector Search only                                   │
-│    중간 질의  → Hybrid Search (Vector + BM25 + RRF)                 │
+│    중간 질의  → Hybrid Search (Qdrant Vector + ES BM25 + RRF)       │
 │    복잡 질의  → Hybrid + Re-ranker + Query Rewriting                │
 │  Self-RAG       검색 결과 자가 평가 → 불충분 시 재검색 (최대 3회)    │
 │  GraphRAG       Neo4j Cypher → 복합 규제 조항 연쇄 탐색              │
@@ -183,10 +183,11 @@ RAG 구조 자체는 동일해요. **LLM이 어디 있느냐**가 다를 뿐이�
 |--------|------|
 | **Backend** | Python 3.11, FastAPI, Uvicorn |
 | **Agent / RAG** | LangChain, LangGraph (Multi-Agent A2A) |
-| **검색 고도화** | Hybrid Search (Vector+BM25+RRF), Cross-Encoder Re-ranker, Query Rewriting |
+| **검색 고도화** | Hybrid Search (Qdrant Vector + Elasticsearch BM25 + RRF), Cross-Encoder Re-ranker, Query Rewriting |
 | **RAG 전략** | Adaptive RAG, Self-RAG, GraphRAG |
 | **Embedding** | `jhgan/ko-sroberta-multitask` (한국어 특화, 768 dim) |
 | **Vector DB** | Qdrant |
+| **키워드 검색** | Elasticsearch (nori 한국어 형태소 분석) |
 | **Graph DB** | Neo4j |
 | **Cache** | Redis (TTL 기반) |
 | **RDB** | PostgreSQL |
@@ -234,7 +235,7 @@ cement-rag-assistant/
 │   └── core/                     # Config, Dependencies
 ├── k8s/                          # Kubernetes 매니페스트
 │   ├── app/ qdrant/ postgres/
-│   ├── redis/ neo4j/ kafka/
+│   ├── redis/ elasticsearch/ neo4j/ kafka/
 │   ├── ollama/ vllm/ monitoring/
 │   ├── jaeger/                   # 에어갭 환경 트레이싱
 │   ├── config/                   # ConfigMap / Secret
@@ -302,6 +303,7 @@ pip install -e ".[dev]"
 python scripts/init_kafka.py
 python scripts/init_qdrant.py
 python scripts/init_neo4j.py
+python scripts/init_elasticsearch.py
 psql -f scripts/init_db.sql
 
 # 인덱싱 파이프라인 실행
