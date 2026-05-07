@@ -260,6 +260,7 @@ cement-rag-assistant/
 
 | # | 문서 | 내용 |
 |---|------|------|
+| 00 | [폴더 구조 설계](docs/design/00_folder_structure.md) | MSA 구조 설계 의도 및 변천 과정 |
 | 01 | [데이터 흐름 설계](docs/design/01_data_flow.md) | 수집 흐름, 청킹 전략, 갱신 주기 |
 | 02 | [DB 스키마 설계](docs/design/02_db_schema.md) | PostgreSQL / Qdrant / Neo4j / Redis |
 | 03 | [Agent 설계](docs/design/03_agent_design.md) | LangGraph 상태, Router, Tool 스펙, A2A |

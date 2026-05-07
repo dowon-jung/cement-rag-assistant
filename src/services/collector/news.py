@@ -14,7 +14,7 @@ from datetime import datetime
 import httpx
 from redis.asyncio import Redis
 
-from app.core.config import settings
+from shared.config import settings
 
 logger = logging.getLogger(__name__)
 

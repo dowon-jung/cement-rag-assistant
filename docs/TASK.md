@@ -7,6 +7,7 @@
 
 | # | 문서 | 파일 | 상태 | 선행 조건 |
 |---|------|------|------|-----------|
+| 00 | 폴더 구조 설계 | `docs/design/00_folder_structure.md` | ✅ | 없음 |
 | 01 | 데이터 흐름 설계 | `docs/design/01_data_flow.md` | ✅ | 없음 |
 | 02 | DB 스키마 설계 | `docs/design/02_db_schema.md` | ✅ | 01 |
 | 03 | Agent 설계 | `docs/design/03_agent_design.md` | ✅ | 01, 02 |

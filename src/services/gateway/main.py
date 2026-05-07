@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import make_asgi_app
 
-from app.core.config import settings
+from shared.config import settings
 
 app = FastAPI(
     title="시멘트 제조업 특화 Hybrid RAG 어시스턴트",

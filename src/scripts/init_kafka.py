@@ -5,11 +5,11 @@ Kafka 토픽 초기화 스크립트
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from kafka.admin import KafkaAdminClient, NewTopic
 from kafka.errors import TopicAlreadyExistsError
-from app.core.config import settings
+from shared.config import settings
 
 # 7일 = 604,800,000ms / 3일 = 259,200,000ms / 14일 = 1,209,600,000ms / 30일 = 2,592,000,000ms
 TOPICS = [

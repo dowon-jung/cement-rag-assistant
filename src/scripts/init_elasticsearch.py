@@ -5,10 +5,10 @@ Elasticsearch 인덱스 초기화 스크립트 (nori 형태소 분석기)
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from elasticsearch import Elasticsearch
-from app.core.config import settings
+from shared.config import settings
 
 # nori 분석기 공통 설정
 SETTINGS = {

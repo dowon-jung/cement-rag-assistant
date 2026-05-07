@@ -5,10 +5,10 @@ Neo4j 제약조건 및 인덱스 초기화 스크립트
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from neo4j import GraphDatabase
-from app.core.config import settings
+from shared.config import settings
 
 CONSTRAINTS = [
     # 법령 코드 유일성

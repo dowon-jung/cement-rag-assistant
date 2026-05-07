@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from app.core.config import settings
+from shared.config import settings
 
 logger = logging.getLogger(__name__)
 

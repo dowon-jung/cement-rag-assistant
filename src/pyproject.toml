@@ -75,8 +75,8 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["src"]
-include = ["app*"]
+where = ["src", "src/shared", "src/services"]
+include = ["shared*", "services*"]
 
 [tool.ruff]
 line-length = 100

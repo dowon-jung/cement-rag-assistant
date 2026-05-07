@@ -8,11 +8,11 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import date
 
-from app.data.collectors.exchange_api import ExchangeCollector
-from app.data.collectors.news_api import NewsCollector, _strip_html
-from app.data.collectors.weather_api import WeatherCollector, _latlon_to_grid, _predict_demand
-from app.data.collectors.coal_price import CoalPriceCollector
-from app.data.samples.generate_erp import generate as generate_erp
+from services.collector.exchange import ExchangeCollector
+from services.collector.news import NewsCollector, _strip_html
+from services.collector.weather import WeatherCollector, _latlon_to_grid, _predict_demand
+from services.collector.coal import CoalPriceCollector
+from services.collector.erp import generate as generate_erp
 
 
 # ── 유틸 함수 테스트 ────────────────────────────────
