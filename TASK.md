@@ -136,24 +136,24 @@
 > 목적: 실제 데이터가 들어오는 파이프라인 완성
 > 선행 조건: Phase 1 완료, API 키 발급 완료
 
-- [ ] 한국은행 환율 API 수집기 (`app/data/collectors/exchange_api.py`)
+- [x] 한국은행 환율 API 수집기 (`app/data/collectors/exchange_api.py`)
   - async ECOS API 호출 (httpx)
   - Redis TTL 캐시 (1시간) → PostgreSQL 영구 저장
   - 수집 완료 시 Kafka `market.raw` 토픽에 이벤트 발행
-- [ ] 네이버 뉴스 API 수집기 (`app/data/collectors/news_api.py`)
+- [x] 네이버 뉴스 API 수집기 (`app/data/collectors/news_api.py`)
   - 키워드 3개 asyncio.gather 병렬 호출
   - Redis TTL 캐시 (30분) → PostgreSQL 영구 저장
   - 수집 완료 시 Kafka `news.raw` 토픽에 이벤트 발행
-- [ ] 기상청 API 수집기 (`app/data/collectors/weather_api.py`)
+- [x] 기상청 API 수집기 (`app/data/collectors/weather_api.py`)
   - async 호출, 위경도 → 격자 좌표 변환
   - Redis TTL 캐시 (1시간)
   - 수집 완료 시 Kafka `weather.raw` 토픽에 이벤트 발행
-- [ ] 유연탄 가격 CSV 수집기 (`app/data/collectors/coal_price.py`)
+- [x] 유연탄 가격 CSV 수집기 (`app/data/collectors/coal_price.py`)
   - 수집 완료 시 Kafka `indexing.requests` 토픽에 발행
-- [ ] ERP 샘플 데이터 생성 (`app/data/samples/generate_erp.py`)
+- [x] ERP 샘플 데이터 생성 (`app/data/samples/generate_erp.py`)
   - 2년치 일별 생산·재고 데이터 생성
   - 배치 완료 시 Kafka `erp.updated` 토픽에 발행
-- [ ] 수집기 단위 테스트 작성
+- [x] 수집기 단위 테스트 작성
 
 ---
 
