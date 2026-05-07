@@ -24,7 +24,7 @@ Step 6  실제 API 수집기 동작 확인       [ ]  ← API 키 필요
 
 ```bash
 # 앱 서버 제외하고 인프라만 먼저 기동
-docker-compose up -d postgres redis qdrant elasticsearch neo4j kafka
+cd ../infra && docker-compose up -d postgres redis qdrant elasticsearch neo4j kafka
 ```
 
 ### 확인 방법
@@ -63,7 +63,7 @@ docker logs cement-kafka --tail 30
 
 # CLUSTER_ID 중복 오류 시 볼륨 초기화
 docker-compose down -v
-docker-compose up -d kafka
+cd ../infra && docker-compose up -d kafka
 ```
 
 **Neo4j 포트 충돌 (7474)**

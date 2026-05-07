@@ -5,12 +5,8 @@
 ```
 src/
 ├── app/          FastAPI 앱 (수집기, Agent, API, 인덱싱, Kafka 등)
-├── scripts/      DB 초기화 스크립트 (init_db, qdrant, es, neo4j, kafka)
+├── scripts/      DB 초기화 스크립트
 ├── tests/        단위 테스트
-├── k8s/          Kubernetes 매니페스트
-├── monitoring/   Prometheus 설정
-├── docker-compose.yml
-├── Dockerfile
 └── pyproject.toml
 ```
 
@@ -20,10 +16,12 @@ src/
 cd src
 pip install -e ".[dev]"
 
-# 인프라 기동
+# 인프라 먼저 기동 (infra/ 폴더에서)
+cd ../infra
 docker-compose up -d postgres redis qdrant elasticsearch neo4j kafka
 
 # DB 초기화
+cd ../src
 python scripts/init_qdrant.py
 python scripts/init_elasticsearch.py
 python scripts/init_neo4j.py

@@ -182,7 +182,7 @@ services:
 
   # ── 앱 서버 ───────────────────────────────────────
   app:
-    build: ./src
+    build: .
     container_name: cement-app
     ports:
       - "8000:8000"
@@ -201,7 +201,7 @@ services:
       kafka:
         condition: service_healthy
     volumes:
-      - ./app:/app/app
+      - ../src/app:/app/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
