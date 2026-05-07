@@ -260,21 +260,21 @@ cement-rag-assistant/
 
 | # | 문서 | 내용 |
 |---|------|------|
-| 01 | [데이터 흐름 설계](docs/01_data_flow.md) | 수집 흐름, 청킹 전략, 갱신 주기 |
-| 02 | [DB 스키마 설계](docs/02_db_schema.md) | PostgreSQL / Qdrant / Neo4j / Redis |
-| 03 | [Agent 설계](docs/03_agent_design.md) | LangGraph 상태, Router, Tool 스펙, A2A |
-| 04 | [API 명세](docs/04_api_spec.md) | 엔드포인트, Pydantic 스키마, SSE |
-| 05 | [환경 설정 가이드](docs/05_env_setup.md) | API 키 발급, Docker / K8s 구성 |
-| 06 | [검색 품질 평가 기준](docs/06_eval_criteria.md) | RAGAS, 청킹 A/B, Re-ranker 비교 |
-| 07 | [모델 서빙 비교 설계](docs/07_model_serving.md) | Ollama vs vLLM vs Bedrock vs Anthropic |
-| 08 | [성능 최적화 설계](docs/08_performance.md) | 비동기 처리, 병렬 Tool 실행, 4-tier 캐시 |
-| 09 | [GraphRAG 설계](docs/09_graph_rag.md) | Neo4j 그래프 구조, Cypher 쿼리 |
-| 10 | [Multi-Agent A2A 설계](docs/10_multi_agent.md) | Orchestrator, Sub-Agent, AgentBus |
-| 11 | [모니터링 설계](docs/11_monitoring.md) | Prometheus, Grafana, LangSmith / Jaeger |
-| 12 | [Kafka 이벤트 스트리밍 설계](docs/12_kafka.md) | Topic 9종, DLQ, Consumer 전략 |
-| 13 | [Kubernetes 배포 설계](docs/13_kubernetes.md) | Deployment, HPA, Ingress, KEDA |
-| 14 | [온프레미스 / 에어갭 설계](docs/14_airgap.md) | AIRGAP_MODE, Harbor, LLM 백엔드 추상화 |
-| 15 | [하드웨어 스펙 가이드](HARDWARE.md) | 구성요소별 CPU/RAM/GPU, 도입 시나리오 3종 |
+| 01 | [데이터 흐름 설계](docs/design/01_data_flow.md) | 수집 흐름, 청킹 전략, 갱신 주기 |
+| 02 | [DB 스키마 설계](docs/design/02_db_schema.md) | PostgreSQL / Qdrant / Neo4j / Redis |
+| 03 | [Agent 설계](docs/design/03_agent_design.md) | LangGraph 상태, Router, Tool 스펙, A2A |
+| 04 | [API 명세](docs/design/04_api_spec.md) | 엔드포인트, Pydantic 스키마, SSE |
+| 05 | [환경 설정 가이드](docs/design/05_env_setup.md) | API 키 발급, Docker / K8s 구성 |
+| 06 | [검색 품질 평가 기준](docs/design/06_eval_criteria.md) | RAGAS, 청킹 A/B, Re-ranker 비교 |
+| 07 | [모델 서빙 비교 설계](docs/design/07_model_serving.md) | Ollama vs vLLM vs Bedrock vs Anthropic |
+| 08 | [성능 최적화 설계](docs/design/08_performance.md) | 비동기 처리, 병렬 Tool 실행, 4-tier 캐시 |
+| 09 | [GraphRAG 설계](docs/design/09_graph_rag.md) | Neo4j 그래프 구조, Cypher 쿼리 |
+| 10 | [Multi-Agent A2A 설계](docs/design/10_multi_agent.md) | Orchestrator, Sub-Agent, AgentBus |
+| 11 | [모니터링 설계](docs/design/11_monitoring.md) | Prometheus, Grafana, LangSmith / Jaeger |
+| 12 | [Kafka 이벤트 스트리밍 설계](docs/design/12_kafka.md) | Topic 9종, DLQ, Consumer 전략 |
+| 13 | [Kubernetes 배포 설계](docs/design/13_kubernetes.md) | Deployment, HPA, Ingress, KEDA |
+| 14 | [온프레미스 / 에어갭 설계](docs/design/14_airgap.md) | AIRGAP_MODE, Harbor, LLM 백엔드 추상화 |
+| 15 | [하드웨어 스펙 가이드](docs/HARDWARE.md) | 구성요소별 CPU/RAM/GPU, 도입 시나리오 3종 |
 
 ---
 

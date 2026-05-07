@@ -182,7 +182,7 @@ services:
 
   # ── 앱 서버 ───────────────────────────────────────
   app:
-    build: .
+    build: ./src
     container_name: cement-app
     ports:
       - "8000:8000"

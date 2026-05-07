@@ -7,21 +7,21 @@
 
 | # | 문서 | 파일 | 상태 | 선행 조건 |
 |---|------|------|------|-----------|
-| 01 | 데이터 흐름 설계 | `docs/01_data_flow.md` | ✅ | 없음 |
-| 02 | DB 스키마 설계 | `docs/02_db_schema.md` | ✅ | 01 |
-| 03 | Agent 설계 | `docs/03_agent_design.md` | ✅ | 01, 02 |
-| 04 | API 명세 | `docs/04_api_spec.md` | ✅ | 03 |
-| 05 | 환경 설정 가이드 | `docs/05_env_setup.md` | ✅ | 없음 |
-| 06 | 검색 품질 평가 기준 | `docs/06_eval_criteria.md` | ✅ | 02, 03 |
-| 07 | 모델 서빙 비교 설계 | `docs/07_model_serving.md` | ✅ | 03 |
-| 08 | 성능 최적화 설계 | `docs/08_performance.md` | ✅ | 04 |
-| 09 | GraphRAG 설계 | `docs/09_graph_rag.md` | ✅ | 02, 03 |
-| 10 | Multi-Agent A2A 설계 | `docs/10_multi_agent.md` | ✅ | 03 |
-| 11 | 모니터링 설계 | `docs/11_monitoring.md` | ✅ | 04 |
-| 12 | Kafka 이벤트 스트리밍 설계 | `docs/12_kafka.md` | ✅ | 01, 02 |
-| 13 | Kubernetes 배포 설계 | `docs/13_kubernetes.md` | ✅ | 11, 12 |
-| 14 | 온프레미스 / 에어갭 설계 | `docs/14_airgap.md` | ✅ | 05, 13 |
-| 15 | 하드웨어 스펙 가이드 | `HARDWARE.md` | ✅ | 05, 07 |
+| 01 | 데이터 흐름 설계 | `docs/design/01_data_flow.md` | ✅ | 없음 |
+| 02 | DB 스키마 설계 | `docs/design/02_db_schema.md` | ✅ | 01 |
+| 03 | Agent 설계 | `docs/design/03_agent_design.md` | ✅ | 01, 02 |
+| 04 | API 명세 | `docs/design/04_api_spec.md` | ✅ | 03 |
+| 05 | 환경 설정 가이드 | `docs/design/05_env_setup.md` | ✅ | 없음 |
+| 06 | 검색 품질 평가 기준 | `docs/design/06_eval_criteria.md` | ✅ | 02, 03 |
+| 07 | 모델 서빙 비교 설계 | `docs/design/07_model_serving.md` | ✅ | 03 |
+| 08 | 성능 최적화 설계 | `docs/design/08_performance.md` | ✅ | 04 |
+| 09 | GraphRAG 설계 | `docs/design/09_graph_rag.md` | ✅ | 02, 03 |
+| 10 | Multi-Agent A2A 설계 | `docs/design/10_multi_agent.md` | ✅ | 03 |
+| 11 | 모니터링 설계 | `docs/design/11_monitoring.md` | ✅ | 04 |
+| 12 | Kafka 이벤트 스트리밍 설계 | `docs/design/12_kafka.md` | ✅ | 01, 02 |
+| 13 | Kubernetes 배포 설계 | `docs/design/13_kubernetes.md` | ✅ | 11, 12 |
+| 14 | 온프레미스 / 에어갭 설계 | `docs/design/14_airgap.md` | ✅ | 05, 13 |
+| 15 | 하드웨어 스펙 가이드 | `docs/HARDWARE.md` | ✅ | 05, 07 |
 
 > 설계 문서 완료 기준: 코드 작성자가 문서만 보고 구현 가능한 수준
 
@@ -31,14 +31,14 @@
 
 > 목적: 나중에 설계가 바뀌어서 코드를 갈아엎는 일 방지
 
-- [x] `docs/01_data_flow.md` 작성
-- [x] `docs/02_db_schema.md` 작성
+- [x] `docs/design/01_data_flow.md` 작성
+- [x] `docs/design/02_db_schema.md` 작성
   - PostgreSQL 테이블 정의 (DDL 포함)
   - Qdrant 컬렉션 정의 (벡터 차원, payload 스키마)
   - Neo4j 그래프 노드/엣지 스키마
   - Redis 캐시 키 설계
   - 질의 유형별 데이터 접근 패턴
-- [x] `docs/03_agent_design.md` 작성
+- [x] `docs/design/03_agent_design.md` 작성
   - LangGraph 상태(State) 정의
   - Router 분류 기준 및 프롬프트
   - Tool별 입출력 스펙
@@ -46,56 +46,56 @@
   - 복합 질의 병렬 처리 전략 (LangGraph Send API)
   - Self-RAG 재검색 루프 설계
   - Adaptive RAG 전략 분기 설계
-- [x] `docs/04_api_spec.md` 작성
+- [x] `docs/design/04_api_spec.md` 작성
   - 전체 엔드포인트 목록
   - 요청/응답 스키마 (Pydantic 모델 기준)
   - SSE 스트리밍 엔드포인트 설계
   - 에러 코드 정의
-- [x] `docs/05_env_setup.md` 작성
+- [x] `docs/design/05_env_setup.md` 작성
   - 필요한 API 키 목록 및 발급 방법
   - .env.example 파일 구성
   - Docker Compose / K8s 환경 구성
-- [x] `docs/06_eval_criteria.md` 작성
+- [x] `docs/design/06_eval_criteria.md` 작성
   - RAGAS 지표 (Faithfulness, Answer Relevancy, Context Recall)
   - 청킹 전략 A/B 비교 실험 설계
   - Re-ranker 도입 전후 비교 설계
   - 골든 셋 구성 방법
-- [x] `docs/07_model_serving.md` 작성
+- [x] `docs/design/07_model_serving.md` 작성
   - Ollama vs vLLM 비교 실험 설계
   - 측정 지표: TPS, TTFT, 동시 요청 처리량
-- [x] `docs/08_performance.md` 작성
+- [x] `docs/design/08_performance.md` 작성
   - 비동기 처리 설계 (asyncio + httpx)
   - LangGraph 병렬 Tool 실행 (Send API)
   - 순차 vs 병렬 응답 속도 측정 계획
-- [x] `docs/09_graph_rag.md` 작성
+- [x] `docs/design/09_graph_rag.md` 작성
   - Neo4j 도입 목적 및 적용 범위
   - 규제 문서 그래프 구조 설계
   - Vector RAG + Graph RAG 결합 전략
-- [x] `docs/10_multi_agent.md` 작성
+- [x] `docs/design/10_multi_agent.md` 작성
   - Orchestrator + Sub-Agent 구조 설계
   - A2A 프로토콜 인터페이스 정의
   - Agent 간 상태 전달 방식
-- [x] `docs/11_monitoring.md` 작성
+- [x] `docs/design/11_monitoring.md` 작성
   - Prometheus 메트릭 정의
   - Grafana 대시보드 구성
   - LangSmith 트레이싱 설정
-- [x] `docs/12_kafka.md` 작성
+- [x] `docs/design/12_kafka.md` 작성
   - Topic 설계 및 파티셔닝 전략
   - Producer / Consumer 구조 설계
   - Dead Letter Queue 처리 전략
   - Docker Compose vs K8s 환경별 구성
-- [x] `docs/13_kubernetes.md` 작성
+- [x] `docs/design/13_kubernetes.md` 작성
   - 서비스별 Deployment / Service 설계
   - HPA(HorizontalPodAutoscaler) 설정 기준
   - ConfigMap / Secret 관리 전략
   - Ingress 설계
-- [x] `docs/14_airgap.md` 작성
+- [x] `docs/design/14_airgap.md` 작성
   - 외부 의존성 목록 및 내부화 전략
   - 모델 사전 반입 절차 (ko-sroberta, Gemma4)
   - Harbor 내부 레지스트리 구성
   - LangSmith → Jaeger + OpenTelemetry 대체
   - 실시간 API 대체 전략 (내부 DB 사전 적재)
-- [x] `HARDWARE.md` 작성 (루트 위치)
+- [x] `docs/HARDWARE.md` 작성 (루트 위치)
   - 구성 요소별 CPU/RAM/디스크 요구사항
   - LLM 서빙별 GPU 요구사항 (Ollama/vLLM)
   - 도입 시나리오 3가지 (PoC / 사내 소규모 / 고객사 납품)

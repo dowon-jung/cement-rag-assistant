@@ -336,7 +336,7 @@ pytest tests/test_collectors.py -v
 
 ## Step 6 — 실제 API 수집기 동작 확인 (API 키 필요)
 
-> API 키 발급 방법은 [docs/05_env_setup.md](../docs/05_env_setup.md) 참고
+> API 키 발급 방법은 [docs/05_env_setup.md](../../docs/design/05_env_setup.md) 참고
 
 ### 6-1. 환율 수집기 확인
 
@@ -432,4 +432,4 @@ Step 1~6 모두 완료 시 아래 상태가 됩니다.
 ✅ 실제 API 수집기 동작 확인
 ```
 
-다음 단계: [Phase 3 — Kafka 이벤트 파이프라인](../TASK.md)
+다음 단계: [Phase 3 — Kafka 이벤트 파이프라인](../../docs/TASK.md)
