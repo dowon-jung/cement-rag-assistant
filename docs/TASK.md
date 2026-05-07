@@ -32,6 +32,10 @@
 
 > 목적: 나중에 설계가 바뀌어서 코드를 갈아엎는 일 방지
 
+- [x] `docs/design/00_folder_structure.md` 작성
+  - MSA 서비스 구조 설계
+  - 폴더 구조 변천 과정
+  - 서비스 간 통신 규칙
 - [x] `docs/design/01_data_flow.md` 작성
 - [x] `docs/design/02_db_schema.md` 작성
   - PostgreSQL 테이블 정의 (DDL 포함)
@@ -114,21 +118,20 @@
   - `.env.example` 작성
   - `.gitignore` 작성
 - [x] 디렉토리 구조 생성
-  - `app/api/`, `app/agent/tools/`, `app/agent/sub_agents/`
-  - `app/indexing/chunking/`, `app/data/collectors/`
-  - `app/core/`, `app/evaluation/`, `app/monitoring/`
-  - `app/kafka/` — Producer / Consumer
-  - `k8s/` — Kubernetes 매니페스트
+  - `src/services/` — collector / indexer / agent / gateway / evaluator
+  - `src/shared/` — config, kafka, db, models
+  - `src/tests/unit/`, `src/tests/integration/`
+  - `infra/k8s/` — Kubernetes 매니페스트
 - [x] Docker Compose 기초 구성
   - Qdrant, PostgreSQL, Redis, Neo4j, Elasticsearch, Kafka(KRaft) 컨테이너
-- [x] `app/core/config.py` 작성
+- [x] `src/shared/config.py` 작성
   - pydantic-settings 기반 환경변수 로딩
 - [x] DB 초기화 스크립트
-  - `scripts/init_db.sql` — PostgreSQL DDL
-  - `scripts/init_qdrant.py` — Qdrant 컬렉션 생성
-  - `scripts/init_neo4j.py` — Neo4j 제약조건 및 인덱스 생성
-  - `scripts/init_kafka.py` — Kafka Topic 생성
-  - `scripts/init_elasticsearch.py` — nori 플러그인 + 인덱스 생성
+  - `src/scripts/init_db.sql` — PostgreSQL DDL
+  - `src/scripts/init_qdrant.py` — Qdrant 컬렉션 생성
+  - `src/scripts/init_neo4j.py` — Neo4j 제약조건 및 인덱스 생성
+  - `src/scripts/init_kafka.py` — Kafka Topic 생성
+  - `src/scripts/init_elasticsearch.py` — nori 플러그인 + 인덱스 생성
 
 ---
 
@@ -137,21 +140,21 @@
 > 목적: 실제 데이터가 들어오는 파이프라인 완성
 > 선행 조건: Phase 1 완료, API 키 발급 완료
 
-- [x] 한국은행 환율 API 수집기 (`app/data/collectors/exchange_api.py`)
+- [x] 한국은행 환율 API 수집기 (`src/services/collector/exchange.py`)
   - async ECOS API 호출 (httpx)
   - Redis TTL 캐시 (1시간) → PostgreSQL 영구 저장
   - 수집 완료 시 Kafka `market.raw` 토픽에 이벤트 발행
-- [x] 네이버 뉴스 API 수집기 (`app/data/collectors/news_api.py`)
+- [x] 네이버 뉴스 API 수집기 (`src/services/collector/news.py`)
   - 키워드 3개 asyncio.gather 병렬 호출
   - Redis TTL 캐시 (30분) → PostgreSQL 영구 저장
   - 수집 완료 시 Kafka `news.raw` 토픽에 이벤트 발행
-- [x] 기상청 API 수집기 (`app/data/collectors/weather_api.py`)
+- [x] 기상청 API 수집기 (`src/services/collector/weather.py`)
   - async 호출, 위경도 → 격자 좌표 변환
   - Redis TTL 캐시 (1시간)
   - 수집 완료 시 Kafka `weather.raw` 토픽에 이벤트 발행
-- [x] 유연탄 가격 CSV 수집기 (`app/data/collectors/coal_price.py`)
+- [x] 유연탄 가격 CSV 수집기 (`src/services/collector/coal.py`)
   - 수집 완료 시 Kafka `indexing.requests` 토픽에 발행
-- [x] ERP 샘플 데이터 생성 (`app/data/samples/generate_erp.py`)
+- [x] ERP 샘플 데이터 생성 (`src/services/collector/erp.py`)
   - 2년치 일별 생산·재고 데이터 생성
   - 배치 완료 시 Kafka `erp.updated` 토픽에 발행
 - [x] 수집기 단위 테스트 작성
@@ -179,33 +182,33 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 ```
 
 ### Producer 구현
-- [ ] Kafka Producer 래퍼 (`app/kafka/producer.py`)
+- [ ] Kafka Producer 래퍼 (`src/shared/kafka/producer.py`)
   - aiokafka 기반 async Producer
   - 메시지 직렬화 (JSON + 스키마 버전 관리)
   - 발행 실패 시 재시도 로직 (3회, exponential backoff)
 
 ### Consumer 구현
-- [ ] 인덱싱 Consumer (`app/kafka/consumers/indexing_consumer.py`)
+- [ ] 인덱싱 Consumer (`src/services/indexer/consumers/indexing_consumer.py`)
   - `indexing.requests` 구독
   - PDF/CSV 유형 감지 → 청킹 전략 분기 → Qdrant 적재
   - 처리 완료 시 `indexing.results` 발행
   - 실패 시 `dlq.errors` 발행
-- [ ] LLM Consumer (`app/kafka/consumers/llm_consumer.py`)
+- [ ] LLM Consumer (`src/services/agent/consumers/llm_consumer.py`)
   - `llm.requests` 구독
   - 뉴스 요약 / Self-RAG 재검색 비동기 처리
   - 완료 시 `llm.results` 발행
-- [ ] ERP Consumer (`app/kafka/consumers/erp_consumer.py`)
+- [ ] ERP Consumer (`src/services/collector/consumers/erp_consumer.py`)
   - `erp.updated` 구독
   - PostgreSQL production_logs upsert
-- [ ] Dead Letter Queue 처리기 (`app/kafka/consumers/dlq_consumer.py`)
+- [ ] Dead Letter Queue 처리기 (`src/shared/kafka/consumers/dlq_consumer.py`)
   - `dlq.errors` 구독
   - 실패 메시지 로깅 및 알림
 
 ### 인덱싱 파이프라인 (Kafka 연동)
-- [ ] Embedding 모델 래퍼 (`app/indexing/embedding.py`)
-- [ ] Semantic chunking (`app/indexing/chunking/semantic.py`)
-- [ ] Table-aware chunking (`app/indexing/chunking/table_aware.py`)
-- [ ] 인덱싱 파이프라인 오케스트레이터 (`app/indexing/pipeline.py`)
+- [ ] Embedding 모델 래퍼 (`src/services/indexer/embedding.py`)
+- [ ] Semantic chunking (`src/services/indexer/chunking/semantic.py`)
+- [ ] Table-aware chunking (`src/services/indexer/chunking/table_aware.py`)
+- [ ] 인덱싱 파이프라인 오케스트레이터 (`src/services/indexer/pipeline.py`)
   - Kafka Consumer에서 메시지 수신 → 파이프라인 실행
 
 ---
@@ -221,19 +224,19 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 - [ ] RRF(Reciprocal Rank Fusion) 결합 (Qdrant 결과 + ES 결과 통합)
 
 ### Re-ranker
-- [ ] Cross-Encoder Re-ranker (`app/indexing/reranker.py`)
+- [ ] Cross-Encoder Re-ranker (`src/services/indexer/reranker.py`)
   - 모델: `cross-encoder/ms-marco-MiniLM-L-6-v2`
   - 상위 20개 → Re-ranker → 상위 5개
   - 도입 전/후 정밀도 비교 측정
 
 ### Query Rewriting
-- [ ] Query Rewriting (`app/agent/query_rewriter.py`)
+- [ ] Query Rewriting (`src/services/agent/query_rewriter.py`)
   - LLM으로 구어체 → 검색 최적화 질의 변환
   - Rewriting 전/후 검색 품질 비교
 
 ### RAGAS 평가 파이프라인
-- [ ] 골든 셋 구성 (`app/evaluation/golden_set.json`, 질의 20개)
-- [ ] RAGAS 평가 스크립트 (`app/evaluation/evaluate.py`)
+- [ ] 골든 셋 구성 (`src/services/evaluator/golden_set.json`, 질의 20개)
+- [ ] RAGAS 평가 스크립트 (`src/services/evaluator/ragas_runner.py`)
   - Faithfulness, Answer Relevancy, Context Recall
 - [ ] 청킹 A/B 비교 실험
   - chunk_size 256 vs 512 vs 1024 / overlap 0 vs 64
@@ -247,10 +250,10 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 > 선행 조건: Phase 3 완료
 > 도입 배경: 복합 규제 질의 처리를 위한 그래프 DB 필요성
 
-- [ ] 규제 문서 → Neo4j 그래프 변환 (`app/indexing/graph_indexer.py`)
+- [ ] 규제 문서 → Neo4j 그래프 변환 (`src/services/indexer/graph.py`)
   - 노드: 법령, 조항, 수치기준, 오염물질
   - 엣지: CONTAINS / REGULATES / APPLIES_TO
-- [ ] Cypher 쿼리 기반 규제 탐색 (`app/agent/tools/graph_tool.py`)
+- [ ] Cypher 쿼리 기반 규제 탐색 (`src/services/agent/tools/graph_tool.py`)
 - [ ] Vector RAG + Graph RAG 결합 전략 구현
 - [ ] 비교 실험: Vector only vs GraphRAG vs 결합
   - 결과: `docs/eval_results/graph_rag_eval.md`
@@ -263,13 +266,13 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 > 선행 조건: Phase 5 완료
 > 도입 배경: 단일 Agent 한계 극복 및 Agent 간 표준 통신 프로토콜 필요
 
-- [ ] Orchestrator Agent (`app/agent/orchestrator.py`)
+- [ ] Orchestrator Agent (`src/services/agent/orchestrator.py`)
 - [ ] Sub-Agent 구현
   - [ ] Market Agent — 환율 + 유연탄 + 원가
   - [ ] News Agent — 뉴스 수집 + 요약
   - [ ] RAG Agent — 문서 검색 (Vector + Graph)
   - [ ] ERP Agent — 생산·재고 분석
-- [ ] A2A 인터페이스 정의 (`app/agent/a2a_protocol.py`)
+- [ ] A2A 인터페이스 정의 (`src/services/agent/a2a_protocol.py`)
 - [ ] Orchestrator → Sub-Agent 병렬 호출 (LangGraph Send API)
 
 ---
@@ -279,10 +282,10 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 > 목적: 질의 복잡도에 따른 동적 검색 전략
 > 선행 조건: Phase 4, 5, 6 완료
 
-- [ ] Adaptive RAG — 질의 난이도 분류기 (`app/agent/adaptive_router.py`)
+- [ ] Adaptive RAG — 질의 난이도 분류기 (`src/services/agent/router.py`)
   - 단순 → Vector only / 중간 → Hybrid / 복잡 → Hybrid + Re-ranker + Rewriting
   - 결과: `docs/eval_results/adaptive_rag_eval.md`
-- [ ] Self-RAG — 검색 결과 자가 평가 (`app/agent/self_rag.py`)
+- [ ] Self-RAG — 검색 결과 자가 평가 (`src/services/agent/self_rag.py`)
   - 불충분 시 최대 3회 재검색
   - LLM 비동기 처리는 Kafka `llm.requests` 통해 전달
   - 결과: `docs/eval_results/self_rag_eval.md`
@@ -294,7 +297,7 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 > 목적: 외부 호출 가능한 API + 실서비스 수준 UX
 > 선행 조건: Phase 7 완료
 
-- [ ] FastAPI 앱 기본 구조 (`app/main.py`)
+- [ ] FastAPI 앱 기본 구조 (`src/services/gateway/main.py`)
   - ApiResponse 공통 래퍼 / GlobalExceptionHandler / CORS
 - [ ] 일반 엔드포인트
   - [ ] `POST /chat` / `POST /chat/compare`
@@ -314,7 +317,7 @@ dlq.errors        Dead Letter Queue (처리 실패 메시지)
 
 - [ ] Ollama 환경 구성 — Gemma4 로컬 서빙
 - [ ] vLLM 환경 구성 — continuous batching (GPU 필요 시 RunPod 활용)
-- [ ] 벤치마크 스크립트 (`scripts/benchmark_llm.py`)
+- [ ] 벤치마크 스크립트 (`src/scripts/benchmark_llm.py`)
   - TPS, TTFT, 동시 요청 1 / 5 / 10개 시나리오
 - [ ] 결과: `docs/eval_results/llm_serving_benchmark.md`
 
@@ -444,20 +447,20 @@ LLM_BACKEND=anthropic  Anthropic API — 엔터프라이즈 계약 + 데이터 �
 | bedrock | △ AWS VPC 내 격리 | 상 | 사용량 기반 | AWS 사용 고객사 |
 | anthropic | ○ 계약적 보호 | 상 | 사용량 기반 | 엔터프라이즈 계약 체결 시 |
 
-- [ ] LLM 백엔드 추상화 레이어 구현 (`app/core/llm_backend.py`)
+- [ ] LLM 백엔드 추상화 레이어 구현 (`src/services/agent/llm_backend.py`)
   - `LLM_BACKEND` 환경변수로 백엔드 선택
   - 동일한 인터페이스로 Ollama / Bedrock / Anthropic API 호출
   - 백엔드 전환 시 코드 변경 없이 동작
 - [ ] AWS Bedrock Claude 연동 옵션 추가
   - boto3 기반 Bedrock 클라이언트
   - VPC 엔드포인트 설정 가이드
-- [ ] 백엔드별 동작 확인 테스트 (`tests/test_llm_backends.py`)
+- [ ] 백엔드별 동작 확인 테스트 (`src/tests/unit/test_llm_backends.py`)
 
 - [ ] 인터넷 완전 차단 환경에서 전체 스택 기동 확인
   - Docker Compose 오프라인 기동 테스트
   - K8s 오프라인 배포 테스트
 - [ ] `AIRGAP_MODE=true` 상태로 예시 질의 5개 정상 동작 확인
-- [ ] 에어갭 배포 가이드 문서 작성 (`docs/airgap_deploy_guide.md`)
+- [ ] 에어갭 배포 가이드 문서 작성 (`docs/design/14_airgap.md` 내 추가)
   - 반입 파일 목록 (모델, 이미지, 패키지)
   - 단계별 설치 절차
   - 트러블슈팅 가이드
