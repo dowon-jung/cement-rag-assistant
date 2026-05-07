@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "cement-rag-assistant"
+version = "0.1.0"
+description = "시멘트 제조업 특화 Hybrid RAG 어시스턴트"
+requires-python = ">=3.11"
+dependencies = [
+    # Web
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+    "httpx>=0.27.0",
+    "slowapi>=0.1.9",
+
+    # LangChain ecosystem
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langgraph>=0.2.0",
+    "langsmith>=0.1.0",
+
+    # Vector / Search / Graph DB
+    "qdrant-client>=1.12.0",
+    "elasticsearch>=8.13.0",
+    "neo4j>=5.25.0",
+
+    # SQL / Cache
+    "sqlalchemy>=2.0.0",
+    "asyncpg>=0.29.0",
+    "redis>=5.0.0",
+
+    # Kafka
+    "aiokafka>=0.11.0",
+
+    # Embedding / Re-ranker
+    "sentence-transformers>=3.0.0",
+    "torch>=2.4.0",
+
+    # PDF / Document
+    "pymupdf>=1.24.0",
+    "bleach>=6.1.0",
+    "pandas>=2.2.0",
+
+    # LLM Backends
+    "ollama>=0.3.0",
+    "anthropic>=0.34.0",
+    "boto3>=1.35.0",
+
+    # Evaluation
+    "ragas>=0.2.0",
+
+    # Monitoring / Tracing
+    "prometheus-client>=0.21.0",
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
+    "opentelemetry-exporter-jaeger>=1.21.0",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-httpx>=0.48b0",
+    "structlog>=24.4.0",
+
+    # UI
+    "streamlit>=1.39.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+    "ruff>=0.6.0",
+    "mypy>=1.11.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

@@ -1,0 +1,215 @@
+services:
+
+  # ── 관계형 DB ──────────────────────────────────────
+  postgres:
+    image: postgres:16
+    container_name: cement-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: cement_rag
+      POSTGRES_USER: cement
+      POSTGRES_PASSWORD: cement_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cement -d cement_rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 캐시 ───────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: cement-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 벡터 DB ────────────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: cement-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:6333/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 키워드 검색 (nori 형태소 분석) ─────────────────
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: cement-elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+      - es_plugins:/usr/share/elasticsearch/plugins
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    container_name: cement-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # ── 그래프 DB ──────────────────────────────────────
+  neo4j:
+    image: neo4j:5-community
+    container_name: cement-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/neo4j_pass
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # ── 메시지 큐 (KRaft 모드) ─────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: cement-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CLUSTER_ID: cement-rag-cluster-01
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: cement-kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: cement-rag
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # ── LLM 서빙 ──────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: cement-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # GPU 사용 시 아래 주석 해제
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # ── 모니터링 ──────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cement-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cement-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: cement-jaeger
+    ports:
+      - "16686:16686"   # UI
+      - "14268:14268"   # HTTP collector
+      - "6831:6831/udp" # UDP agent
+
+  # ── 앱 서버 ───────────────────────────────────────
+  app:
+    build: .
+    container_name: cement-app
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+  es_data:
+  es_plugins:
+  neo4j_data:
+  kafka_data:
+  ollama_data:
+  prometheus_data:
+  grafana_data:

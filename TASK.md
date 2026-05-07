@@ -108,21 +108,21 @@
 > 목적: 이후 모든 코드가 들어갈 구조를 먼저 잡는다
 > 선행 조건: Phase 0 완료
 
-- [ ] Python 프로젝트 초기화
+- [x] Python 프로젝트 초기화
   - `pyproject.toml` 작성 (의존성 목록)
   - `.env.example` 작성
   - `.gitignore` 작성
-- [ ] 디렉토리 구조 생성
+- [x] 디렉토리 구조 생성
   - `app/api/`, `app/agent/tools/`, `app/agent/sub_agents/`
   - `app/indexing/chunking/`, `app/data/collectors/`
   - `app/core/`, `app/evaluation/`, `app/monitoring/`
   - `app/kafka/` — Producer / Consumer
   - `k8s/` — Kubernetes 매니페스트
-- [ ] Docker Compose 기초 구성
+- [x] Docker Compose 기초 구성
   - Qdrant, PostgreSQL, Redis, Neo4j, Elasticsearch, Kafka(KRaft) 컨테이너
-- [ ] `app/core/config.py` 작성
+- [x] `app/core/config.py` 작성
   - pydantic-settings 기반 환경변수 로딩
-- [ ] DB 초기화 스크립트
+- [x] DB 초기화 스크립트
   - `scripts/init_db.sql` — PostgreSQL DDL
   - `scripts/init_qdrant.py` — Qdrant 컬렉션 생성
   - `scripts/init_neo4j.py` — Neo4j 제약조건 및 인덱스 생성
