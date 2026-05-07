@@ -231,15 +231,17 @@ class RAGAgent(BaseAgent):
         
         # 2. 분기 실행
         if search_type == "vector":
-            results = await self.vector_search(query)
+            results = await self.vector_search(query)        # Qdrant
         elif search_type == "graph":
-            results = await self.graph_search(query)
+            results = await self.graph_search(query)         # Neo4j
         else:  # hybrid
-            vec, graph = await asyncio.gather(
-                self.vector_search(query),
-                self.graph_search(query),
+            # Qdrant Vector + Elasticsearch BM25(nori) 병렬 호출 후 RRF 결합
+            vec, bm25, graph = await asyncio.gather(
+                self.vector_search(query),       # Qdrant cosine
+                self.es_bm25_search(query),      # Elasticsearch + nori
+                self.graph_search(query),        # Neo4j
             )
-            results = self.merge_results(vec, graph)
+            results = self.rrf_merge(vec, bm25, graph)
         
         # 3. Self-RAG 루프
         results = await self.self_rag_loop(query, results)

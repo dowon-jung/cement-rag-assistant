@@ -274,6 +274,7 @@ cement-rag-assistant/
 | 12 | [Kafka 이벤트 스트리밍 설계](docs/12_kafka.md) | Topic 9종, DLQ, Consumer 전략 |
 | 13 | [Kubernetes 배포 설계](docs/13_kubernetes.md) | Deployment, HPA, Ingress, KEDA |
 | 14 | [온프레미스 / 에어갭 설계](docs/14_airgap.md) | AIRGAP_MODE, Harbor, LLM 백엔드 추상화 |
+| 15 | [하드웨어 스펙 가이드](HARDWARE.md) | 구성요소별 CPU/RAM/GPU, 도입 시나리오 3종 |
 
 ---
 
@@ -364,7 +365,7 @@ Harbor 내부 레지스트리, 오프라인 모델 서빙(Ollama), Jaeger 트레
 
 | Phase | 내용 | 핵심 기술 |
 |-------|------|-----------|
-| 0 | 설계 확정 | 설계 문서 14개 |
+| 0 | 설계 확정 | 설계 문서 15개 (docs 14개 + HARDWARE.md) |
 | 1 | 프로젝트 뼈대 | Docker Compose, 디렉토리 구조 |
 | 2 | 데이터 수집 | httpx async, Redis, asyncio.gather |
 | 3 | Kafka 파이프라인 | aiokafka, DLQ, 인덱싱 워커 |

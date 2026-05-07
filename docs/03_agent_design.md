@@ -73,8 +73,8 @@ class AgentState(TypedDict):
 
 | 난이도 | 조건 | 전략 |
 |--------|------|------|
-| simple | 단일 의도 + 키워드 명확 | Vector Search only |
-| medium | 단일 의도 + 자연어 질의 | Hybrid Search (BM25 + Vector + RRF) |
+| simple | 단일 의도 + 키워드 명확 | Vector Search only (Qdrant) |
+| medium | 단일 의도 + 자연어 질의 | Hybrid Search (Qdrant Vector + Elasticsearch BM25/nori + RRF) |
 | complex | 복합 의도 or 비교/추론 필요 | Hybrid + Re-ranker + Query Rewriting |
 
 ### 분류 프롬프트

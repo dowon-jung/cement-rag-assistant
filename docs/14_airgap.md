@@ -19,6 +19,7 @@
 | 네이버 뉴스 API | 외부 API | 내부 RSS 피드 or 샘플 |
 | 기상청 Open API | 외부 API | 기상청 FTP 내부망 or 샘플 |
 | HuggingFace 모델 | 외부 다운로드 | **사전 반입 후 로컬 저장** |
+| Elasticsearch nori 플러그인 | 외부 다운로드 | **사전 반입 후 plugins 볼륨 마운트** |
 | Docker Hub | 외부 레지스트리 | **Harbor 내부 레지스트리** |
 | PyPI 패키지 | 외부 인덱스 | **devpi / Nexus 내부 미러** |
 | LangSmith | SaaS 트레이싱 | **Jaeger + OpenTelemetry** |
@@ -200,7 +201,30 @@ class EmbeddingModel:
 
 ---
 
-## 6. Ollama 모델 사전 반입
+## 6. Elasticsearch nori 플러그인 사전 반입
+
+```bash
+# 인터넷 환경에서 nori 플러그인 zip 다운로드
+ES_VERSION=8.13.0
+wget https://artifacts.elastic.co/downloads/elasticsearch-plugins/analysis-nori/analysis-nori-${ES_VERSION}.zip
+
+# 내부망 서버로 복사 후
+# Elasticsearch 컨테이너 plugins 볼륨에 마운트
+docker cp analysis-nori-${ES_VERSION}.zip elasticsearch:/tmp/
+
+# 컨테이너 내부에서 설치
+docker exec -it elasticsearch \
+  bin/elasticsearch-plugin install --batch file:///tmp/analysis-nori-${ES_VERSION}.zip
+
+# 또는 K8s 환경에서는 initContainer로 설치 (13_kubernetes.md 7장 참고)
+```
+
+> nori 플러그인이 설치되지 않으면 한국어 형태소 분석이 동작하지 않아
+> Elasticsearch 인덱스 생성 시 에러가 발생합니다.
+
+---
+
+## 7. Ollama 모델 사전 반입
 
 ```bash
 # 인터넷 환경에서
@@ -224,7 +248,7 @@ docker exec -it ollama ollama list
 
 ---
 
-## 7. Harbor 내부 컨테이너 레지스트리
+## 8. Harbor 내부 컨테이너 레지스트리
 
 ### 구성
 
@@ -290,7 +314,7 @@ spec:
 
 ---
 
-## 8. PyPI 내부 미러 (devpi)
+## 9. PyPI 내부 미러 (devpi)
 
 ### 구성
 
@@ -324,7 +348,7 @@ trusted-host = devpi.internal
 
 ---
 
-## 9. LangSmith → Jaeger 대체
+## 10. LangSmith → Jaeger 대체
 
 ### LangSmith의 한계
 - SaaS 서비스 → 외부 전송 필수
@@ -367,7 +391,7 @@ tracer = trace.get_tracer(__name__)
 
 ---
 
-## 10. 실시간 API 대체 데이터 준비
+## 11. 실시간 API 대체 데이터 준비
 
 ### 환율 — 사전 수집 CSV
 
@@ -407,7 +431,7 @@ python scripts/load_historical_exchange.py
 
 ---
 
-## 11. 에어갭 배포 절차
+## 12. 에어갭 배포 절차
 
 ```bash
 # === 인터넷 환경 (사전 작업) ===
@@ -460,11 +484,12 @@ curl http://cement-rag.internal/health
 
 ---
 
-## 12. 에어갭 검증 체크리스트
+## 13. 에어갭 검증 체크리스트
 
 - [ ] 모든 K8s Pod 정상 기동 (외부 이미지 풀 시도 없음)
 - [ ] Ollama 모델 로딩 확인 (`docker exec ollama ollama list`)
 - [ ] 임베딩 모델 로딩 확인 (로컬 경로에서)
+- [ ] Elasticsearch nori 플러그인 정상 동작 확인 (`GET _cat/plugins`)
 - [ ] `AIRGAP_MODE=true` 상태로 예시 질의 5개 정상 응답
 - [ ] 외부 API 호출 시도 없음 (네트워크 모니터링)
 - [ ] Jaeger 트레이스 정상 수집
@@ -473,7 +498,7 @@ curl http://cement-rag.internal/health
 
 ---
 
-## 13. 도입 효과
+## 14. 도입 효과
 
 이 설계로 얻을 수 있는 효과는 다음과 같습니다.
 

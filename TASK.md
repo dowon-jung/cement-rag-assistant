@@ -21,7 +21,7 @@
 | 12 | Kafka 이벤트 스트리밍 설계 | `docs/12_kafka.md` | ✅ | 01, 02 |
 | 13 | Kubernetes 배포 설계 | `docs/13_kubernetes.md` | ✅ | 11, 12 |
 | 14 | 온프레미스 / 에어갭 설계 | `docs/14_airgap.md` | ✅ | 05, 13 |
-| 15 | 하드웨어 스펙 가이드 | `docs/15_hardware_spec.md` | ✅ | 05, 07 |
+| 15 | 하드웨어 스펙 가이드 | `HARDWARE.md` | ✅ | 05, 07 |
 
 > 설계 문서 완료 기준: 코드 작성자가 문서만 보고 구현 가능한 수준
 
@@ -95,6 +95,11 @@
   - Harbor 내부 레지스트리 구성
   - LangSmith → Jaeger + OpenTelemetry 대체
   - 실시간 API 대체 전략 (내부 DB 사전 적재)
+- [x] `HARDWARE.md` 작성 (루트 위치)
+  - 구성 요소별 CPU/RAM/디스크 요구사항
+  - LLM 서빙별 GPU 요구사항 (Ollama/vLLM)
+  - 도입 시나리오 3가지 (PoC / 사내 소규모 / 고객사 납품)
+  - 전체 스토리지 합계 산정
 
 ---
 

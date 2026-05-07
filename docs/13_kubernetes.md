@@ -221,9 +221,86 @@ spec:
             storage: 50Gi
 ```
 
+## 7. Elasticsearch StatefulSet (nori 플러그인)
+
+```yaml
+# k8s/elasticsearch/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: cement-rag
+spec:
+  serviceName: elasticsearch-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      initContainers:
+        - name: install-nori
+          image: harbor.internal/cement-rag/elasticsearch:8.13.0
+          command: ["sh", "-c"]
+          args:
+            - |
+              if [ ! -d /usr/share/elasticsearch/plugins/analysis-nori ]; then
+                bin/elasticsearch-plugin install --batch analysis-nori
+              fi
+          volumeMounts:
+            - name: plugins
+              mountPath: /usr/share/elasticsearch/plugins
+      containers:
+        - name: elasticsearch
+          image: harbor.internal/cement-rag/elasticsearch:8.13.0
+          ports:
+            - containerPort: 9200
+            - containerPort: 9300
+          env:
+            - name: discovery.type
+              value: "single-node"
+            - name: xpack.security.enabled
+              value: "false"
+            - name: ES_JAVA_OPTS
+              value: "-Xms2g -Xmx2g"
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 4Gi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/elasticsearch/data
+            - name: plugins
+              mountPath: /usr/share/elasticsearch/plugins
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 30Gi
+    - metadata:
+        name: plugins
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+```
+
+> 에어갭 환경에서는 nori 플러그인을 사전 반입 후 `plugins/` 볼륨에 마운트합니다.
+
 ---
 
-## 7. Kafka StatefulSet (KRaft 모드)
+## 8. Kafka StatefulSet (KRaft 모드)
 
 ```yaml
 # k8s/kafka/statefulset.yaml
@@ -270,7 +347,7 @@ spec:
 
 ---
 
-## 8. Ollama Deployment (GPU 노드)
+## 9. Ollama Deployment (GPU 노드)
 
 ```yaml
 # k8s/ollama/deployment.yaml
@@ -312,7 +389,7 @@ spec:
 
 ---
 
-## 9. vLLM Deployment (GPU 노드)
+## 10. vLLM Deployment (GPU 노드)
 
 ```yaml
 # k8s/vllm/deployment.yaml
@@ -366,7 +443,7 @@ spec:
 > LLM_BACKEND=vllm 시 VLLM_HOST 환경변수로 이 서비스를 가리킵니다.
 > Ollama와 vLLM 중 환경에 맞게 하나만 기동하거나 둘 다 기동 후 LLM_BACKEND로 전환할 수 있습니다.
 
-## 10. Service 정의
+## 11. Service 정의
 
 ```yaml
 # k8s/app/service.yaml
@@ -401,7 +478,7 @@ spec:
 
 ---
 
-## 11. ConfigMap 및 Secret
+## 12. ConfigMap 및 Secret
 
 ### ConfigMap (설정값)
 
@@ -442,7 +519,7 @@ kubectl create secret generic cement-rag-secrets \
 
 ---
 
-## 12. Ingress
+## 13. Ingress
 
 ```yaml
 # k8s/ingress.yaml
@@ -476,7 +553,7 @@ spec:
 
 ---
 
-## 13. PersistentVolume 전략
+## 14. PersistentVolume 전략
 
 | 서비스 | 용도 | 크기 | StorageClass |
 |--------|------|------|--------------|
@@ -490,7 +567,7 @@ spec:
 
 ---
 
-## 14. 배포 순서
+## 15. 배포 순서
 
 ```bash
 # 1. 네임스페이스
@@ -526,7 +603,7 @@ kubectl apply -f k8s/ingress.yaml
 
 ---
 
-## 15. 롤링 업데이트 전략
+## 16. 롤링 업데이트 전략
 
 ```yaml
 spec:
@@ -546,7 +623,7 @@ kubectl rollout history deployment/cement-rag-app -n cement-rag
 
 ---
 
-## 16. 배포 검증 체크리스트
+## 17. 배포 검증 체크리스트
 
 - [ ] 모든 Pod Running 상태 확인 (`kubectl get pods -n cement-rag`)
 - [ ] 헬스체크 `/health` 200 응답
@@ -561,7 +638,7 @@ kubectl rollout history deployment/cement-rag-app -n cement-rag
 
 ---
 
-## 17. 부하 테스트 시나리오
+## 18. 부하 테스트 시나리오
 
 ```bash
 # locust로 K8s 환경에 부하

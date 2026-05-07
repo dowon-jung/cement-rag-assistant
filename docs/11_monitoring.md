@@ -144,7 +144,14 @@ dlq_messages_total = Counter(
 rag_search_total = Counter(
     "rag_search_total",
     "RAG 검색 호출",
-    ["search_type"]  # vector | graph | hybrid
+    ["search_type", "backend"]   # search_type: vector|graph|hybrid|bm25
+                                  # backend: qdrant|elasticsearch|neo4j
+)
+
+rag_search_latency_seconds = Histogram(
+    "rag_search_latency_seconds",
+    "RAG 검색 지연",
+    ["backend"]
 )
 
 rag_retrieval_quality = Histogram(
@@ -192,6 +199,10 @@ scrape_configs:
     static_configs:
       - targets: ['qdrant:6333']
     metrics_path: /metrics
+  
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch-exporter:9114']
 ```
 
 ---
@@ -245,8 +256,11 @@ scrape_configs:
 | 패널 | PromQL |
 |------|--------|
 | 검색 유형별 호출 비율 | `sum by (search_type) (rate(rag_search_total[5m]))` |
+| 백엔드별 검색 지연 (Qdrant/ES/Neo4j) | `histogram_quantile(0.95, rate(rag_search_latency_seconds_bucket[5m]))` |
 | Self-RAG 재시도 분포 | Histogram `self_rag_retries` |
 | 평균 검색 품질 | Histogram avg `rag_retrieval_quality` |
+| Elasticsearch 인덱스 크기 | `elasticsearch_indices_store_size_bytes` |
+| Elasticsearch 쿼리 지연 | `elasticsearch_indices_search_query_time_seconds` |
 
 ---
 
@@ -397,6 +411,7 @@ async def health():
         "postgres": await check_postgres(),
         "redis": await check_redis(),
         "qdrant": await check_qdrant(),
+        "elasticsearch": await check_elasticsearch(),
         "neo4j": await check_neo4j(),
         "kafka": await check_kafka(),
         "llm_backend": await check_llm(),
