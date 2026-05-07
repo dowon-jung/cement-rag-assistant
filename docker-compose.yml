@@ -91,7 +91,7 @@ services:
     volumes:
       - neo4j_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:7474 || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -195,6 +195,8 @@ services:
       qdrant:
         condition: service_healthy
       elasticsearch:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
       kafka:
         condition: service_healthy
